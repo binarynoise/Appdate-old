@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+	android:layout_height="match_parent"
+	android:layout_width="match_parent"
+	android:orientation="vertical"
+	tools:context=".ui.AddAppFragment"
+	tools:layout_marginTop="60dp"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	>
+	
+	<androidx.core.widget.NestedScrollView
+		android:layout_height="0dp"
+		android:layout_width="0dp"
+		app:layout_constraintBottom_toTopOf="@id/addApp_v_tableRow"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		>
+		
+		<androidx.constraintlayout.widget.ConstraintLayout
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:padding="8dp"
+			>
+			
+			<androidx.appcompat.widget.AppCompatTextView
+				android:id="@+id/addApp_descriptor"
+				android:layout_height="wrap_content"
+				android:layout_width="0dp"
+				android:text="@string/addApp_description"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				/>
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/addApp_url_float"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/addApp_descriptor"
+				>
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:hint="@string/updateUrl"
+					android:id="@+id/addApp_url"
+					android:inputType="textUri|textWebEditText"
+					android:layout_height="wrap_content"
+					android:layout_marginEnd="8dp"
+					android:layout_marginStart="8dp"
+					android:layout_marginTop="8dp"
+					android:layout_width="match_parent"
+					/>
+			</com.google.android.material.textfield.TextInputLayout>
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/addApp_name_float"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/addApp_url_float"
+				>
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:hint="@string/name"
+					android:id="@+id/addApp_name"
+					android:inputType="text"
+					android:layout_height="wrap_content"
+					android:layout_marginEnd="8dp"
+					android:layout_marginStart="8dp"
+					android:layout_marginTop="8dp"
+					android:layout_width="match_parent"
+					android:singleLine="true"
+					/>
+			
+			</com.google.android.material.textfield.TextInputLayout>
+			
+			<androidx.appcompat.widget.AppCompatCheckBox
+				android:clickable="true"
+				android:focusable="true"
+				android:id="@+id/addApp_appInstalledCheckbox"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				android:text="@string/addApp_appInstalled_checkbox"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/addApp_name_float"
+				/>
+			
+			<androidx.constraintlayout.widget.ConstraintLayout
+				android:id="@+id/addApp_packageDetailsContainer"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:layout_width="match_parent"
+				android:visibility="gone"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/addApp_appInstalledCheckbox"
+				>
+				
+				<androidx.appcompat.widget.AppCompatSpinner
+					android:id="@+id/addApp_packageNameSpinner"
+					android:layout_height="wrap_content"
+					android:layout_width="match_parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					app:layout_goneMarginBottom="0dp"
+					tools:listitem="@layout/layout_add_app_package_name_spinner"
+					/>
+				
+				<TableLayout
+					android:layout_height="wrap_content"
+					android:layout_width="0dp"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toBottomOf="@id/addApp_packageNameSpinner"
+					tools:ignore="HardcodedText"
+					>
+					
+					<TableRow>
+						
+						<androidx.appcompat.widget.AppCompatTextView
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_width="wrap_content"
+							android:text="@string/version"
+							/>
+						
+						<androidx.appcompat.widget.AppCompatTextView
+							android:id="@+id/addApp_installed_version"
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_width="wrap_content"
+							tools:text="10.5.2"
+							/>
+					</TableRow>
+					
+					<TableRow>
+						
+						<androidx.appcompat.widget.AppCompatTextView
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_width="wrap_content"
+							android:text="@string/last_updated"
+							/>
+						
+						<androidx.appcompat.widget.AppCompatTextView
+							android:id="@+id/addApp_installed_lastUpdated"
+							android:layout_height="wrap_content"
+							android:layout_margin="8dp"
+							android:layout_width="wrap_content"
+							tools:text="51.9.65"
+							/>
+					</TableRow>
+				</TableLayout>
+			
+			</androidx.constraintlayout.widget.ConstraintLayout>
+			
+			<Space
+				android:layout_height="1dp"
+				android:layout_marginTop="8dp"
+				android:layout_width="match_parent"
+				app:layout_constraintTop_toBottomOf="@+id/addApp_packageDetailsContainer"
+				/>
+		
+		</androidx.constraintlayout.widget.ConstraintLayout>
+	
+	</androidx.core.widget.NestedScrollView>
+	
+	<TableRow
+		android:id="@+id/addApp_v_tableRow"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="8dp"
+		android:layout_marginEnd="8dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="8dp"
+		android:layout_width="match_parent"
+		android:orientation="horizontal"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		style="?android:attr/buttonBarStyle"
+		>
+		
+		<androidx.constraintlayout.widget.ConstraintLayout
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_width="wrap_content"
+			>
+			
+			<androidx.appcompat.widget.AppCompatButton
+				android:id="@+id/addApp_testButton"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="@string/addApp_test"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				style="?android:attr/buttonBarButtonStyle"
+				/>
+			
+			<ProgressBar
+				android:id="@+id/addApp_testButton_progressBar"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:visibility="invisible"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				/>
+		</androidx.constraintlayout.widget.ConstraintLayout>
+		
+		<androidx.appcompat.widget.AppCompatButton
+			android:enabled="false"
+			android:id="@+id/addApp_addButton"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_width="wrap_content"
+			android:text="@string/addApp_add"
+			style="?android:attr/buttonBarButtonStyle"
+			/>
+	
+	</TableRow>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

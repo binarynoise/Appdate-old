@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+	android:fitsSystemWindows="true"
+	android:layout_height="match_parent"
+	android:layout_width="match_parent"
+	tools:context=".ui.MainActivity"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	>
+	
+	<com.google.android.material.appbar.AppBarLayout
+		android:id="@+id/appDetail_appbar"
+		android:layout_height="wrap_content"
+		android:layout_width="match_parent"
+		android:theme="@style/AppTheme.AppBarOverlay"
+		>
+		
+		<androidx.appcompat.widget.Toolbar
+			android:background="?attr/colorPrimary"
+			android:id="@+id/appDetail_toolbar"
+			android:layout_height="?attr/actionBarSize"
+			android:layout_weight="1"
+			android:layout_width="match_parent"
+			app:popupTheme="@style/AppTheme.PopupOverlay"
+			app:title="@string/app_name"
+			>
+		
+		</androidx.appcompat.widget.Toolbar>
+		
+		<com.google.android.material.tabs.TabLayout
+			android:id="@+id/tabs"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			app:tabGravity="fill"
+			>
+			
+			<com.google.android.material.tabs.TabItem
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="@string/tab_text_1"
+				/>
+			
+			<com.google.android.material.tabs.TabItem
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="@string/tab_text_2"
+				/>
+			
+			<com.google.android.material.tabs.TabItem
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="@string/tab_text_3"
+				/>
+		
+		</com.google.android.material.tabs.TabLayout>
+	</com.google.android.material.appbar.AppBarLayout>
+	
+	<androidx.viewpager.widget.ViewPager
+		android:id="@+id/container"
+		android:layout_height="match_parent"
+		android:layout_width="match_parent"
+		app:layout_behavior="@string/appbar_scrolling_view_behavior"
+		/>
+	
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab"
+		android:layout_gravity="end|bottom"
+		android:layout_height="wrap_content"
+		android:layout_margin="@dimen/fab_margin"
+		android:layout_width="wrap_content"
+		app:srcCompat="@drawable/ic_add_white_24dp"
+		/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

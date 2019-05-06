@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="tab_text_1">Hinzufügen</string>
+	<string name="tab_text_2">Übersicht</string>
+	<string name="tab_text_3">Einstellungen</string>
+	<string name="addApp_description">Hier kannst Du eine neue App hinzufügen</string>
+	<string name="appDetail_description">Hier kannst Du die Details der App sehen (und ändern)</string>
+	<string name="updateUrl">URL</string>
+	<string name="name">Name</string>
+	<string name="last_updated">zuletzt aktualisert</string>
+	<string name="err_no_prefs_yet">Es gibt noch keine Einstellungen</string>
+	<string name="err_invalidURL">Die URL ist ungültig. Die App konnte nicht hinzugefügt werden.</string>
+	<string name="err_noReleases">Die App hat noch keine Releases.</string>
+	<string name="addApp_test">Konfiguration testen</string>
+	<string name="addApp_testSucceed">Test erfolgreich! Die App hat die Version \'%s\'.</string>
+	<string name="addApp_testFailed">"Test fehlgeschlagen: "</string>
+	<string name="addApp_appInstalled_checkbox">App bereits installiert?</string>
+	<string name="addApp_add">App hinzufügen</string>
+	<string name="err_emptyUrl">Die URL sollte nicht leer sein.</string>
+	<string name="appDetail_apply">Übernehmen</string>
+	<string name="err_emptyName">Der Name sollte nicht leer sein.</string>
+	<string name="version">Version</string>
+	<string name="appDetail_back">Zurück</string>
+	<string name="appDetail_alertDelete_header">App löschen</string>
+	<string name="appDetail_alertDelete_content">Möchtest du die App wirklich löschen?</string>
+	<string name="appDetail_installSuccess">Installation der App %s erfolgreich!</string>
+	<string name="appDetail_downloadSuccess">Download der App %s erfolgreich!</string>
+	<string name="appDetail_installFailed">Installation der App %s fehlgeschlagen</string>
+	<string name="appDetail_downloadFailed">Download der App %s fehlgeschlagen</string>
+	<string name="appDetail_updateAvailable">Update verfügbar</string>
+	<string name="appDetail_updateFailed">Update fehlgeschlagen:</string>
+	<string name="appDetail_updateUpToDate">App ist schon aktuell</string>
+</resources>

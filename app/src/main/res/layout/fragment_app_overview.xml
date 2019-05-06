@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.recyclerview.widget.RecyclerView
+	android:layout_height="0dp"
+	android:layout_marginBottom="8dp"
+	android:layout_marginEnd="16dp"
+	android:layout_marginStart="16dp"
+	android:layout_marginTop="8dp"
+	android:layout_width="0dp"
+	android:name="de.tike.appdate.fragment.AppOverviewFragment"
+	android:scrollbars="vertical"
+	app:layoutManager="LinearLayoutManager"
+	app:layout_constraintBottom_toBottomOf="parent"
+	app:layout_constraintEnd_toEndOf="parent"
+	app:layout_constraintStart_toStartOf="parent"
+	app:layout_constraintTop_toTopOf="parent"
+	tools:context=".ui.AppOverviewFragment"
+	tools:layout_height="match_parent"
+	tools:layout_width="match_parent"
+	tools:listitem="@layout/layout_app_overview_list_item"
+	tools:showIn="@layout/activity_main"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	/>
+
+
+
+

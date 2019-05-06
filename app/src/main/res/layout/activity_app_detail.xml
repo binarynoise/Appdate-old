@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+	android:layout_height="match_parent"
+	android:layout_width="match_parent"
+	tools:context=".ui.AppDetailActivity"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	>
+	
+	<com.google.android.material.appbar.AppBarLayout
+		android:id="@+id/appDetail_appbar"
+		android:layout_height="wrap_content"
+		android:layout_width="match_parent"
+		android:theme="@style/AppTheme.AppBarOverlay"
+		app:layout_constraintTop_toTopOf="parent"
+		tools:background="@color/colorPrimary"
+		tools:layout_height="40dp"
+		>
+		
+		<androidx.constraintlayout.widget.ConstraintLayout
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			>
+			
+			<androidx.appcompat.widget.Toolbar
+				android:background="?attr/colorPrimary"
+				android:id="@+id/appDetail_toolbar"
+				android:layout_height="56dp"
+				android:layout_width="0dp"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toStartOf="@id/appDetail_updateButton_container"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				app:popupTheme="@style/AppTheme.PopupOverlay"
+				app:title="@string/app_name"
+				/>
+			
+			<androidx.constraintlayout.widget.ConstraintLayout
+				android:id="@+id/appDetail_updateButton_container"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="16dp"
+				android:layout_width="wrap_content"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toStartOf="@id/appDetail_installButton_container"
+				app:layout_constraintTop_toTopOf="parent"
+				>
+				
+				<ImageButton
+					android:id="@+id/appDetail_updateButton"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:src="@drawable/ic_update_white_24dp"
+					android:tint="@android:color/primary_text_dark"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					style="?attr/buttonBarButtonStyle"
+					tools:ignore="ContentDescription"
+					/>
+				
+				<ProgressBar
+					android:id="@+id/appDetail_updateButton_progressBar"
+					android:indeterminateOnly="true"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:visibility="invisible"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					/>
+			</androidx.constraintlayout.widget.ConstraintLayout>
+			
+			<androidx.constraintlayout.widget.ConstraintLayout
+				android:id="@+id/appDetail_installButton_container"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="16dp"
+				android:layout_width="wrap_content"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toStartOf="@id/appDetail_downloadButton_container"
+				app:layout_constraintTop_toTopOf="parent"
+				>
+				
+				<ImageButton
+					android:id="@+id/appDetail_installButton"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:src="@drawable/ic_install_update_white_24dp"
+					android:tint="@android:color/primary_text_dark"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					style="?attr/buttonBarButtonStyle"
+					tools:ignore="ContentDescription"
+					/>
+				
+				<ProgressBar
+					android:id="@+id/appDetail_installButton_progressBar"
+					android:indeterminateOnly="true"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:visibility="invisible"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					/>
+			</androidx.constraintlayout.widget.ConstraintLayout>
+			
+			<androidx.constraintlayout.widget.ConstraintLayout
+				android:id="@+id/appDetail_downloadButton_container"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="16dp"
+				android:layout_width="wrap_content"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toStartOf="@id/appDetail_deleteButton_container"
+				app:layout_constraintTop_toTopOf="parent"
+				>
+				
+				<ImageButton
+					android:id="@+id/appDetail_downloadButton"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:src="@drawable/ic_file_download_white_24dp"
+					android:tint="@android:color/primary_text_dark"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					style="?attr/buttonBarButtonStyle"
+					tools:ignore="ContentDescription"
+					/>
+				
+				<ProgressBar
+					android:id="@+id/appDetail_downloadButton_progressBar"
+					android:indeterminateOnly="true"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:visibility="invisible"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					/>
+			</androidx.constraintlayout.widget.ConstraintLayout>
+			
+			<androidx.constraintlayout.widget.ConstraintLayout
+				android:id="@+id/appDetail_deleteButton_container"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="16dp"
+				android:layout_width="wrap_content"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				>
+				
+				<ImageButton
+					android:id="@+id/appDetail_deleteButton"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:src="@drawable/ic_delete_white_24dp"
+					android:tint="@android:color/primary_text_dark"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					style="?attr/buttonBarButtonStyle"
+					tools:ignore="ContentDescription"
+					/>
+				
+				<ProgressBar
+					android:id="@+id/appDetail_deleteButton_progressBar"
+					android:indeterminateOnly="true"
+					android:layout_height="24dp"
+					android:layout_width="24dp"
+					android:visibility="invisible"
+					app:layout_constraintBottom_toBottomOf="parent"
+					app:layout_constraintEnd_toEndOf="parent"
+					app:layout_constraintStart_toStartOf="parent"
+					app:layout_constraintTop_toTopOf="parent"
+					/>
+			</androidx.constraintlayout.widget.ConstraintLayout>
+		
+		</androidx.constraintlayout.widget.ConstraintLayout>
+	
+	</com.google.android.material.appbar.AppBarLayout>
+	
+	<ProgressBar
+		android:id="@+id/appDetail_progressBar"
+		android:indeterminate="true"
+		android:layout_height="wrap_content"
+		android:layout_width="match_parent"
+		android:visibility="gone"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@id/appDetail_appbar"
+		style="?android:attr/progressBarStyleHorizontal"
+		tools:max="100"
+		tools:progress="50"
+		tools:visibility="visible"
+		/>
+	
+	<ScrollView
+		android:layout_height="0dp"
+		android:layout_width="match_parent"
+		app:layout_constraintBottom_toTopOf="@+id/tableRow"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@id/appDetail_progressBar"
+		>
+		
+		<androidx.constraintlayout.widget.ConstraintLayout
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent"
+			android:padding="8dp"
+			>
+			
+			<TextView
+				android:id="@+id/appDetail_describtion"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="8dp"
+				android:layout_marginStart="8dp"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				android:text="@string/appDetail_description"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toTopOf="parent"
+				/>
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/appDetail_name_float"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="8dp"
+				android:layout_marginStart="8dp"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/appDetail_describtion"
+				>
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:hint="@string/name"
+					android:id="@+id/appDetail_name"
+					android:inputType="text"
+					android:layout_height="wrap_content"
+					android:layout_width="match_parent"
+					/>
+			</com.google.android.material.textfield.TextInputLayout>
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/appDetail_url_float"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="8dp"
+				android:layout_marginStart="8dp"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/appDetail_name_float"
+				>
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:editable="false"
+					android:hint="@string/updateUrl"
+					android:id="@+id/appDetail_url"
+					android:inputType="none"
+					android:layout_height="wrap_content"
+					android:layout_width="match_parent"
+					/>
+			</com.google.android.material.textfield.TextInputLayout>
+			
+			<com.google.android.material.textfield.TextInputLayout
+				android:id="@+id/appDetail_last_updated_float"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="8dp"
+				android:layout_marginStart="8dp"
+				android:layout_marginTop="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@id/appDetail_url_float"
+				>
+				
+				<com.google.android.material.textfield.TextInputEditText
+					android:editable="false"
+					android:hint="@string/last_updated"
+					android:id="@+id/appDetail_last_updated"
+					android:inputType="none"
+					android:layout_height="wrap_content"
+					android:layout_width="match_parent"
+					app:layout_constraintTop_toBottomOf="@+id/appDetail_url"
+					/>
+			</com.google.android.material.textfield.TextInputLayout>
+			
+			<TextView
+				android:id="@+id/appDetail_textView"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="8dp"
+				android:layout_width="match_parent"
+				app:layout_constraintTop_toBottomOf="@id/appDetail_last_updated_float"
+				tools:layout_editor_absoluteX="16dp"
+				tools:text="{\n\tJSON\n}"
+				/>
+		</androidx.constraintlayout.widget.ConstraintLayout>
+	</ScrollView>
+	
+	<TableRow
+		android:id="@+id/tableRow"
+		android:layout_height="wrap_content"
+		android:layout_width="match_parent"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		style="?android:attr/buttonBarStyle"
+		>
+		
+		<Button
+			android:enabled="false"
+			android:id="@+id/appDetail_applyButton"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_width="wrap_content"
+			android:text="@string/appDetail_apply"
+			style="?android:attr/buttonBarButtonStyle"
+			/>
+		
+		<Button
+			android:id="@+id/appDetail_cancelButton"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_width="wrap_content"
+			android:text="@string/appDetail_back"
+			style="?android:attr/buttonBarButtonStyle"
+			/>
+	</TableRow>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
