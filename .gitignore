@@ -1,11 +1,14 @@
 .gradle
+.idea
 /local.properties
 /captures
 /JavaTest/
 /testapp/
 settings.gradle
 *.apk
-**/build
+*.iml
+**/.externalNativeBuild
+**/build/
 **/release/
 **/keystore/
 **/auth/
