@@ -36,6 +36,9 @@ android {
 			path file('src/main/cpp/CMakeLists.txt')
 		}
 	}
+	lintOptions {
+		abortOnError false
+	}
 }
 dependencies {
 	implementation fileTree(include: ['*.jar'], dir: 'libs')
