@@ -24,8 +24,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import de.binarynoise.appdate.App;
 import de.binarynoise.appdate.R;
+import de.binarynoise.appdate.app.App;
 import de.binarynoise.appdate.util.RunningInBackground;
 import de.binarynoise.appdate.util.TextChangedListener;
 import de.binarynoise.appdate.util.Util;
@@ -44,8 +44,7 @@ public class AddAppFragment extends Fragment {
 	private static final String           TAG              = "AddApp";
 	private static final String           PACKAGE_NAME     = "packageName";
 	private static final String           PACKAGE_INFO     = "packageInfo";
-	@Nullable
-	private              App              tempApp;
+	@Nullable private    App              tempApp;
 	private              PackageInfo      tempInfo;
 	private              View             myView;
 	private              EditText         nameView;
@@ -57,23 +56,23 @@ public class AddAppFragment extends Fragment {
 	private              CheckBox         installedCheckBox;
 	private              ConstraintLayout packageDetailContainer;
 	private              ProgressBar      testButtonProgressBar;
-	
+
 	@Override
 	public void setUserVisibleHint(boolean isVisibleToUser) {
 		super.setUserVisibleHint(isVisibleToUser);
-		
+
 		if (isVisibleToUser) {
 			//hide fab
 			if (sfcm.sfc.floatingActionButton != null) {
 				sfcm.sfc.floatingActionButton.animate().alpha(0.0F);
 				sfcm.sfc.floatingActionButton.setClickable(false);
 			}
-			
+
 			//show keyboard if text input fields are empty
 			if (urlView.getText().length() == 0) {
 				urlView.setFocusableInTouchMode(true);
 				urlView.requestFocus();
-				
+
 				if (getActivity() != null) {
 					getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 					InputMethodManager systemService =
@@ -88,7 +87,7 @@ public class AddAppFragment extends Fragment {
 				sfcm.sfc.floatingActionButton.animate().alpha(1.0F);
 				sfcm.sfc.floatingActionButton.setClickable(true);
 			}
-			
+
 			//show keyboard
 			FragmentActivity activity = getActivity();
 			if (activity != null) {
@@ -99,22 +98,22 @@ public class AddAppFragment extends Fragment {
 			}
 		}
 	}
-	
+
 	/**
 	 * Inflate the layout for this fragment
 	 */
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		myView = inflater.inflate(R.layout.fragment_add_app, container, false);
-		
+
 		testButton = myView.findViewById(R.id.addApp_testButton);
 		testButton.setOnClickListener(v -> onTestButtonClick());
-		
+
 		addButton = myView.findViewById(R.id.addApp_addButton);
 		addButton.setOnClickListener(this::onAddButtonClick);
-		
+
 		testButtonProgressBar = myView.findViewById(R.id.addApp_testButton_progressBar);
-		
+
 		nameView = myView.findViewById(R.id.addApp_name);
 		nameView.addTextChangedListener(new TextChangedListener() {
 			@Override
@@ -126,7 +125,7 @@ public class AddAppFragment extends Fragment {
 				}
 			}
 		});
-		
+
 		urlView = myView.findViewById(R.id.addApp_url);
 		urlView.addTextChangedListener(new TextChangedListener() {
 			@Override
@@ -134,26 +133,26 @@ public class AddAppFragment extends Fragment {
 				addButton.setEnabled(false);
 			}
 		});
-		
+
 		packageName = myView.findViewById(R.id.layout_addApp_packageName_spinner_text);
-		
+
 		packagenamespinner = myView.findViewById(R.id.addApp_packageNameSpinner);
 		packagenamespinner.setEnabled(false);
-		
+
 		installedCheckBox = myView.findViewById(R.id.addApp_appInstalledCheckbox);
 		installedCheckBox.setOnCheckedChangeListener(this::onAppInstalledCheckbuttonCheckedChanged);
-		
+
 		packageDetailContainer = myView.findViewById(R.id.addApp_packageDetailsContainer);
-		
+
 		return myView;
 	}
-	
+
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		sfcm.sfc.addAppFragment = this;
 	}
-	
+
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -161,14 +160,14 @@ public class AddAppFragment extends Fragment {
 		requireActivity();
 		sfcm.sfc.addAppFragment = this;
 	}
-	
+
 	@Override
 	public void onStop() {
 		super.onStop();
 		if (sfcm.sfc.addAppFragment == this)
 			sfcm.sfc.addAppFragment = null;
 	}
-	
+
 	@RunningInBackground
 	private void onTestButtonClick() {
 		new Thread(() -> {
@@ -177,10 +176,10 @@ public class AddAppFragment extends Fragment {
 				testButton.setEnabled(false);
 				testButtonProgressBar.setVisibility(View.VISIBLE);
 			});
-			
+
 			String urlString = urlView.getText().toString();
 			urlString = urlFilterPattern.matcher(urlString).replaceAll("");
-			
+
 			Context context = requireContext();
 			if (urlString.isEmpty()) {
 				toast(context, getText(R.string.err_emptyUrl), Toast.LENGTH_LONG);
@@ -190,13 +189,13 @@ public class AddAppFragment extends Fragment {
 				});
 				return;
 			}
-			
+
 			if (!urlString.startsWith("http://") && !urlString.startsWith("https://") && !urlString.contains("://"))
 				urlString = "https://" + urlString;
-			
+
 			String finalUrlString = urlString;
 			activity.runOnUiThread(() -> urlView.setText(finalUrlString));
-			
+
 			URL url;
 			try {
 				url = new URL(urlString);
@@ -229,7 +228,7 @@ public class AddAppFragment extends Fragment {
 			}
 			toast(context, String.format(context.getString(R.string.addApp_testSucceed), tempApp.updateVersion.toString()),
 				Toast.LENGTH_SHORT);
-			
+
 			activity.runOnUiThread(() -> {
 				addButton.setEnabled(true);
 				testButtonProgressBar.setVisibility(View.INVISIBLE);
@@ -237,7 +236,7 @@ public class AddAppFragment extends Fragment {
 			});
 		}).start();
 	}
-	
+
 	private void onAddButtonClick(@SuppressWarnings("unused") View view) {
 		if (tempApp == null || tempApp.installedName.isEmpty())
 			toast(view.getContext(), getString(R.string.err_emptyName), Toast.LENGTH_SHORT);
@@ -253,36 +252,36 @@ public class AddAppFragment extends Fragment {
 				sfcm.sfc.mainActivity.viewPager.setCurrentItem(1);
 		}
 	}
-	
+
 	@SuppressWarnings("ObjectAllocationInLoop")
 	private void onAppInstalledCheckbuttonCheckedChanged(@SuppressWarnings("unused") CompoundButton compoundButton,
 		boolean checked) {
 		Spinner spinner = packagenamespinner;
 		spinner.setEnabled(checked);
-		
+
 		if (!checked) { // clear Spinner
 			SpinnerAdapter spinnerAdapter = new SimpleAdapter(sfcm.sfc.getContext(), new ArrayList<Map<String, String>>(),
 				R.layout.layout_add_app_package_name_spinner, new String[]{PACKAGE_NAME},
 				new int[]{R.id.layout_addApp_packageName_spinner_text});
 			spinner.setAdapter(spinnerAdapter);
-			
+
 			packageDetailContainer.setVisibility(View.GONE);
 			return;
 		}
-		
+
 		// set up Spinner
 		Context context = requireContext();
-		
+
 		PackageManager pm = context.getPackageManager();
 		List<PackageInfo> installedPackages = pm.getInstalledPackages(0);
-		
+
 		Collections.sort(installedPackages, (o1, o2) -> {
 			String first = o1.packageName;
 			String second = o2.packageName;
-			
+
 			return first.toLowerCase().compareTo(second.toLowerCase());
 		});
-		
+
 		List<Map<String, Object>> hints = new ArrayList<>();
 		for (PackageInfo packageInfo : installedPackages)
 			if (!appFilterPattern.matcher(packageInfo.packageName).matches()) {
@@ -291,39 +290,37 @@ public class AddAppFragment extends Fragment {
 				map.put(PACKAGE_NAME, packageInfo.packageName);
 				hints.add(map);
 			}
-		
+
 		if (hints.size() == 1)
 			toast(sfcm.sfc.getContext(), "Please grant permission to read installed packages", Toast.LENGTH_LONG);
-		
+
 		SpinnerAdapter spinnerAdapter =
 			new SimpleAdapter(context, hints, R.layout.layout_add_app_package_name_spinner, new String[]{PACKAGE_NAME},
 				new int[]{R.id.layout_addApp_packageName_spinner_text});
-		
+
 		spinner.setAdapter(spinnerAdapter);
-		
+
 		TextView version = requireActivity().findViewById(R.id.addApp_installed_version);
 		TextView date = requireActivity().findViewById(R.id.addApp_installed_lastUpdated);
-		
+
 		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			@SuppressWarnings({"unchecked", "ConstantConditions"})
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				Map<String, Object> item = (Map<String, Object>) parent.getSelectedItem();
 				tempInfo = (PackageInfo) item.get(PACKAGE_INFO);
-				
+
 				version.setText(tempInfo.versionName);
 				nameView.setText(tempInfo.applicationInfo.loadLabel(pm));
-				
+
 				String dateAsString = Util.getDateTimeStringForInstant(tempInfo.lastUpdateTime);
 				date.setText(dateAsString);
 			}
-			
+
 			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			
-			}
+			public void onNothingSelected(AdapterView<?> parent) {}
 		});
-		
+
 		packageDetailContainer.setVisibility(View.VISIBLE);
 	}
 }

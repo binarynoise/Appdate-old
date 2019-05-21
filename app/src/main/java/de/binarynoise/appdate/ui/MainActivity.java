@@ -10,8 +10,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
-import de.binarynoise.appdate.App;
 import de.binarynoise.appdate.R;
+import de.binarynoise.appdate.app.App;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
@@ -20,20 +20,20 @@ import static de.binarynoise.appdate.SFC.sfcm;
  */
 public class MainActivity extends AppCompatActivity implements AppOverviewFragment.OnListFragmentInteractionListener {
 	ViewPager viewPager;
-	
+
 	@Override
 	public void onListFragmentInteraction(App app) {
 		AppDetailActivity.start(getBaseContext(), app);
 	}
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		Toolbar toolbar = findViewById(R.id.appDetail_toolbar);
 		setSupportActionBar(toolbar);
-		
+
 		FloatingActionButton floatingActionButton = findViewById(R.id.fab);
 		if (floatingActionButton != null)
 			sfcm.sfc.floatingActionButton = floatingActionButton;
@@ -41,21 +41,21 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 			throw new RuntimeException("FloatingActionButton not available, although it should be",
 				new NullPointerException("FloatingActionButton is null"));
 		sfcm.sfc.floatingActionButton.setOnClickListener(v -> viewPager.setCurrentItem(0));
-		
+
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the activity.
 		// The PagerAdapter that will provide fragments for each of the sections.
 		// Set up the ViewPager with the sections adapter.
 		viewPager = findViewById(R.id.container);
 		viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
-		
+
 		TabLayout tabLayout = findViewById(R.id.tabs);
-		
+
 		viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
 		viewPager.setCurrentItem(1);
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -63,23 +63,23 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		sfcm.sfc.mainActivity = this;
 		sfcm.sfc.initalizeIfNotYetInitalized(getApplicationContext());
 	}
-	
+
 	@Override
 	public void onStop() {
 		super.onStop();
 		if (sfcm.sfc.mainActivity == this)
 			sfcm.sfc.mainActivity = null;
-		
+
 		if (sfcm.sfc.floatingActionButton == findViewById(R.id.fab))
 			sfcm.sfc.floatingActionButton = null;
 	}
-	
+
 	@Override
 	protected void onPause() {
 		sfcm.sfc.appList.saveChanges();
 		super.onPause();
 	}
-	
+
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
 	 * one of the sections/tabs/pages.
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
 		}
-		
+
 		@Override
 		public Fragment getItem(int position) {
 			switch (position) {
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 					throw new RuntimeException(String.format("Invalid fragment count: %d", position));
 			}
 		}
-		
+
 		@Override
 		public int getCount() { return 3; }
 	}

@@ -8,6 +8,7 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import de.binarynoise.appdate.app.App;
 import de.binarynoise.appdate.receiver.NotificationCallbackReceiver;
 import de.binarynoise.appdate.util.RunInBackground;
 import de.binarynoise.appdate.util.RunningInBackground;
@@ -22,7 +23,7 @@ public class UpdateSchedulerService extends JobService {
 	private static final String        TAG = "UpdateSchedulerService";
 	private              Thread        thread;
 	private              JobParameters jobParameters;
-	
+
 	@RunningInBackground
 	@Override
 	public void onCreate() {
@@ -30,13 +31,13 @@ public class UpdateSchedulerService extends JobService {
 		sfcm.sfc.backgroundService = this;
 		thread = new Thread(this::checkForUpdates);
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		sfcm.sfc.backgroundService = null;
 	}
-	
+
 	@Override
 	public boolean onStartJob(JobParameters params) {
 		sfcm.sfc.initalizeIfNotYetInitalized(getApplicationContext());
@@ -44,13 +45,13 @@ public class UpdateSchedulerService extends JobService {
 		thread.start();
 		return true;
 	}
-	
+
 	@Override
 	public boolean onStopJob(JobParameters params) {
 		thread.interrupt();
 		return false;
 	}
-	
+
 	@SuppressWarnings("ObjectAllocationInLoop")
 	@RunInBackground
 	private void checkForUpdates() {
@@ -68,9 +69,9 @@ public class UpdateSchedulerService extends JobService {
 					action.putExtra(EXTRA_APP_PACKAGENAME, app.installedName);
 				else
 					action.putExtra(EXTRA_APP_PACKAGENAME, app.installedPackageName);
-				
+
 				String title = String.format("Update for %s", app.installedName);
-				
+
 				String text;
 				if (app.isInstalled())
 					text = String.format(
@@ -80,7 +81,7 @@ public class UpdateSchedulerService extends JobService {
 					text =
 						String.format("Appdate can install app %s.\nThe available version is %s", app.installedName, app.updateVersion);
 				Drawable drawable = app.getIcon();
-				
+
 				notification(drawable, title, text, action);
 			}
 		}

@@ -1,12 +1,16 @@
-package de.binarynoise.appdate;
+package de.binarynoise.appdate.app;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import androidx.annotation.Nullable;
 
@@ -17,10 +21,10 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import de.binarynoise.appdate.callbacks.ErrorCallback;
-import de.binarynoise.appdate.callbacks.ProgressCallback;
-import de.binarynoise.appdate.callbacks.SuccessCallback;
-import de.binarynoise.appdate.callbacks.UpToDateCallback;
+import de.binarynoise.appdate.DownloadManagerService;
+import de.binarynoise.appdate.Installer;
+import de.binarynoise.appdate.R;
+import de.binarynoise.appdate.callbacks.*;
 import de.binarynoise.appdate.util.*;
 import net.erdfelt.android.apk.AndroidApk;
 
@@ -34,14 +38,12 @@ public class App {
 	public final        String                 downloadURLString;
 	public              String                 installedName;
 	public              Version                updateVersion;
-	@Nullable
-	public              String                 installedPackageName;
+	@Nullable public    String                 installedPackageName;
 	public              boolean                hasUpdates;
 	public              long                   lastUpdated;
 	public              String                 cachePath;
 	public              long                   cacheFileSize         = -1;
-	@Nullable
-	public              Version                installedVersion;
+	@Nullable public    Version                installedVersion;
 	public transient    InstallState           installState          = InstallState.notInstalling;
 	public transient    Download               downloadState         = Download.notDownloading;
 	public transient    ProgressCallback       downloadProgressCallback;
@@ -52,20 +54,20 @@ public class App {
 	public transient    UpToDateCallback       installUpToDateCallback;
 	public transient    long                   lastCheckedForUpdates = -1;
 	public transient    Tupel<Version, String> lastVersion;
-	
+
 	@RunInBackground
 	public App(String installedName, URL updateUrl) throws IOException {
 		this.installedName = installedName.trim();
 		this.updateUrl = updateUrl;
 //		isInstalled = false;
-		
+
 		Tupel<Version, String> t = getLatestVersionCode();
 		updateVersion = t._1;
 		downloadURLString = t._2;
 		hasUpdates = true;
 		installedVersion = new Version("");
 	}
-	
+
 	@RunInBackground
 	public App(PackageInfo packageInfo, PackageManager pm, URL updateUrl) throws IOException {
 		installedName = String.valueOf(packageInfo.applicationInfo.loadLabel(pm));
@@ -75,28 +77,37 @@ public class App {
 		installedVersion = new Version(packageInfo.versionName);
 		lastUpdated = packageInfo.lastUpdateTime;
 //		isInstalled = true;
-		
+
 		Tupel<Version, String> t = getLatestVersionCode();
 		updateVersion = t._1;
 		downloadURLString = t._2;
 		hasUpdates = false;
 	}
-	
-	@SuppressWarnings("HardcodedFileSeparator")
+
+	@RunInBackground
+	private App(AppTemplate template) throws IOException {
+		installedName = template.name;
+		installedPackageName = template.packageName;
+		updateUrl = template.updateUrl;
+		Tupel<Version, String> t = getLatestVersionCode();
+		downloadURLString = t._2;
+		updateVersion = t._1;
+	}
+
 	public static String toAbsolutePath(URL base, String rel) throws MalformedURLException {
 		return !rel.isEmpty() && rel.charAt(0) == '/' ? new URL(base, rel).toString() : rel;
 	}
-	
+
 	public String getLastUpdatedString() {
 		return Util.getDateTimeStringForInstant(lastUpdated);
 	}
-	
+
 	public String getInstalledVersionString() {
 		if (!isInstalled())
 			installedVersion = null;
 		return installedVersion == null ? "" : installedVersion.toString();
 	}
-	
+
 	public boolean isInstalled() {
 		Context context = sfcm.sfc.getContext();
 		if (installedPackageName == null || installedPackageName.isEmpty())
@@ -116,20 +127,20 @@ public class App {
 			} catch (IOException ignore) {}
 		return false;
 	}
-	
+
 	@RunInBackground
 	public void download() {
+		Context context = sfcm.sfc.getContext();
 		try {
 			if (!checkForUpdates()) {
-				downloadErrorCallback.onError(
-					new InstallNotPermittedException(sfcm.sfc.getContext().getString(R.string.appDetail_updateUpToDate)));
+				downloadErrorCallback.onError(new InstallNotPermittedException(context.getString(R.string.appDetail_updateUpToDate)));
 				return;
 			}
 		} catch (IOException e) {
 			downloadErrorCallback.onError(e);
 			return;
 		}
-		
+
 		if (isDownloadValid()) {
 			AndroidApk apk;
 			try {
@@ -143,58 +154,65 @@ public class App {
 				return;
 			}
 		}
-		
-		new Thread(() -> {
-			try {
-				Tupel<String, Long> t = DownloadManager.downloadToFile(downloadURLString, Util.getFolderForType("apk"),
-					(progress, max) -> downloadProgressCallback.onProgress(progress, max));
-				cachePath = t._1;
-				cacheFileSize = t._2;
-			} catch (IOException e) {
-				downloadErrorCallback.onError(e);
-				return;
-			}
-			
-			if (installedPackageName == null || installedPackageName.isEmpty()) {
-				AndroidApk apk;
+		ResultCallback<Tupel<String, Long>> resultCallback = (t, successCallback, errorCallback) -> {
+			cachePath = t._1;
+			cacheFileSize = t._2;
+
+			if (installedPackageName == null || installedPackageName.isEmpty())
 				try {
-					apk = new AndroidApk(new File(cachePath));
+					AndroidApk apk = new AndroidApk(new File(cachePath));
+					installedPackageName = apk.getPackageName();
+					successCallback.onSuccess();
 				} catch (IOException e) {
-					downloadErrorCallback.onError(e);
-					return;
+					errorCallback.onError(e);
 				}
-				installedPackageName = apk.getPackageName();
-				downloadSuccessCallback.onSuccess();
+		};
+		ServiceConnection serviceConnection = new ServiceConnection() {
+			@Override
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				((DownloadManagerService.MyBinder) service)
+					.getService()
+					.downloadInBackground(downloadURLString, Util.getFolderForType("apk"), resultCallback, () -> {
+						downloadSuccessCallback.onSuccess();
+						context.unbindService(this);
+					}, t -> {
+						downloadErrorCallback.onError(t);
+						context.unbindService(this);
+					}, (progress, max) -> downloadProgressCallback.onProgress(progress, max));
 			}
-		}).start();
+
+			@Override
+			public void onServiceDisconnected(ComponentName name) {}
+		};
+		context.bindService(new Intent(context, DownloadManagerService.class), serviceConnection, Context.BIND_AUTO_CREATE);
 	}
-	
+
 	@RunInBackground
 	public boolean checkForUpdates() throws IOException {
 		updateVersion = getLatestVersionCode()._1;
 		hasUpdates = installedVersion == null || !isInstalled() || updateVersion.isNewer(installedVersion);
 		return hasUpdates;
 	}
-	
+
 	public void install() {
 		Installer.install(this);
 	}
-	
+
 	public String setInstalledName(String newInstalledName) {
 		if (!isInstalled())
 			installedName = newInstalledName;
 		return installedName;
 	}
-	
+
 	public void delete() {
 		//TODO
 	}
-	
+
 	@RunInBackground
 	public Tupel<Version, String> getLatestVersionCode() throws IOException {
 		if (System.currentTimeMillis() - lastCheckedForUpdates < 2000 && lastVersion != null && lastVersion._1 != null)
 			return lastVersion;
-		
+
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(updateUrl.openStream()))) {
 			String line;
 			while ((line = reader.readLine()) != null)
@@ -217,7 +235,7 @@ public class App {
 		Log.e(TAG, "no releases found");
 		throw new IOException(sfcm.sfc.getContext().getString(R.string.err_noReleases));
 	}
-	
+
 	public boolean isDownloadValid() {
 		if (cachePath == null || cachePath.isEmpty())
 			return false;
@@ -234,7 +252,7 @@ public class App {
 			deleteCacheFile();
 		return valid;
 	}
-	
+
 	public void deleteCacheFile() {
 		if (cachePath.isEmpty())
 			return;
@@ -244,8 +262,8 @@ public class App {
 			cacheFileSize = 0;
 		}
 	}
-	
-	void onInstallStateChange(Bundle bundle) {
+
+	public void onInstallStateChange(Bundle bundle) {
 		int state = bundle.getInt(EXTRA_STATUS);
 		if (state == STATUS_SUCCESS) {
 			installSuccessCallback.onSuccess();
@@ -262,8 +280,8 @@ public class App {
 		} else
 			installState = InstallState.pending;
 	}
-	
-	Drawable getIcon() {
+
+	public Drawable getIcon() {
 		PackageManager packageManager = sfcm.sfc.getContext().getPackageManager();
 		try {
 			PackageInfo packageInfo = packageManager.getPackageInfo(installedPackageName, 0);
@@ -272,11 +290,11 @@ public class App {
 			return new ColorDrawable(Color.TRANSPARENT);
 		}
 	}
-	
+
 	public enum InstallState {
 		notInstalling, pending, installing, successfull, failed
 	}
-	
+
 	public enum Download {
 		notDownloading, pending, downloading, complete, failed, cancelling, cancelled
 	}
