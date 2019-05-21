@@ -1,11 +1,5 @@
 apply plugin: 'com.android.application'
 android {
-	signingConfigs {
-		config {
-			keyAlias 'signing key'
-			storeFile file('C:/Daten/Java/keystore.jks')
-		}
-	}
 	compileSdkVersion 28
 	defaultConfig {
 		applicationId "de.binarynoise.appdate"
