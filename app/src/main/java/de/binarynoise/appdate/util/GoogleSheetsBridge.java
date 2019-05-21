@@ -13,7 +13,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import de.binarynoise.auth.Tokens;
 
 public class GoogleSheetsBridge {
 	private static final String           applicationName = "Appdate";
@@ -50,7 +49,8 @@ public class GoogleSheetsBridge {
 		List<String> scopes = new ArrayList<>();
 		scopes.add("https://www.googleapis.com/auth/cloud-platform");
 		scopes.addAll(SheetsScopes.all());
-		credential = jsonFactory.fromString(Tokens.getGoogleCred(), GoogleCredential.class).createScoped(scopes);
+		credential = jsonFactory.fromString("", GoogleCredential.class).createScoped(scopes);
+		throw new IOException("No api key, get yourself your own api key and put it here");
 	}
 	
 	@RunInBackground
