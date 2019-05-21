@@ -1,6 +1,11 @@
 .gradle
 /local.properties
 /captures
-**/build
 /JavaTest/
 /testapp/
+settings.gradle
+*.apk
+**/build
+**/release/
+**/keystore/
+**/auth/
