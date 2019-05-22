@@ -50,6 +50,6 @@ dependencies {
 		exclude group: 'org.apache.httpcomponents'
 	}
 	implementation 'com.google.code.gson:gson:2.8.5'
-	implementation 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
+	implementation 'com.google.oauth-client:google-oauth-client-jetty:1.29.0'
 	implementation 'net.erdfelt.android:apk-parser:1.1'
 }
