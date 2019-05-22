@@ -1,4 +1,7 @@
-# Appdate [![Build Status](https://travis-ci.com/binarynoise/Appdate.svg?branch=master)](https://travis-ci.com/binarynoise/Appdate)
+# Appdate
+
+[![Build Status](https://travis-ci.com/binarynoise/Appdate.svg?branch=master)](https://travis-ci.com/binarynoise/Appdate)
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=binarynoise/Appdate)](https://dependabot.com)
 
 Appdate looks for updates of other apps 
 by scanning the website where the updates are released.
