@@ -35,7 +35,7 @@ android {
 		abortOnError false
 	}
 	packagingOptions {
-		exclude += ["META-INF/**"]
+		excludes += ["META-INF/**"]
 	}
 }
 dependencies {
