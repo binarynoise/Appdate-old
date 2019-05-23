@@ -19,7 +19,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import de.binarynoise.auth.Tokens;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
@@ -65,8 +64,7 @@ public class GoogleSheetsBridge {
 		List<String> scopes = new ArrayList<>();
 		scopes.add("https://www.googleapis.com/auth/cloud-platform");
 		scopes.addAll(SheetsScopes.all());
-		credential = GoogleCredential
-			.fromStream(new ByteArrayInputStream(Tokens.getGoogleCred().getBytes()), httpTransport, jsonFactory)
+		credential = GoogleCredential.fromStream(new ByteArrayInputStream("".getBytes()), httpTransport, jsonFactory)
 			.createScoped(scopes);
 	}
 	
