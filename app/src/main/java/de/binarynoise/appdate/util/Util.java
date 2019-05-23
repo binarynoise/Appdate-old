@@ -96,6 +96,10 @@ public final class Util {
 		Log.println(level, tag, String.valueOf(text));
 	}
 	
+	public static void logPretty(String tag, Object o, int level) {
+		log(tag, prettyGson.toJson(o), level);
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static void notification(Drawable icon, CharSequence title, CharSequence text, Intent action) {
 		Context context = sfcm.sfc.getContext();
@@ -106,7 +110,6 @@ public final class Util {
 			builder.setContentText(text);
 //			builder.setAutoCancel(true);
 			builder.setStyle(new Notification.BigTextStyle().bigText(text));
-//			builder.addAction(new Notification.Action.Builder(R.drawable.ic_update_white_24dp, title, pendingIntent).build());
 			builder.setLargeIcon(drawableToBitmap(icon));
 			builder.setSmallIcon(R.drawable.ic_update_white_24dp);
 			builder.setContentTitle(title);
@@ -137,13 +140,11 @@ public final class Util {
 		return bitmap;
 	}
 	
-	@SuppressWarnings("unused")
 	public static void dumpBundle(String tag, Bundle extras) {
-		extras
-			.keySet()
-			.iterator()
-			.forEachRemaining(
-				s -> Log.d(tag, String.format("'%s': '%s'", s, String.valueOf(extras.get(s)).replaceAll("[\\r\\n]", ""))));
+		
+		for (String s : extras.keySet()) {
+			Log.d(tag, String.format("'%s': '%s'", s, String.valueOf(extras.get(s)).replaceAll("[\\r\\n]", "")));
+		}
 	}
 	
 	@SuppressWarnings("SameParameterValue")

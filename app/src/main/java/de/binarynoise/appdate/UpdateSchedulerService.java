@@ -15,7 +15,7 @@ import de.binarynoise.appdate.util.RunningInBackground;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 import static de.binarynoise.appdate.receiver.NotificationCallbackReceiver.ACTION_OPEN;
-import static de.binarynoise.appdate.receiver.NotificationCallbackReceiver.EXTRA_APP_PACKAGENAME;
+import static de.binarynoise.appdate.receiver.NotificationCallbackReceiver.EXTRA_APP_ID;
 import static de.binarynoise.appdate.util.Util.log;
 import static de.binarynoise.appdate.util.Util.notification;
 
@@ -65,11 +65,8 @@ public class UpdateSchedulerService extends JobService {
 			if (app.hasUpdates) {
 				Intent action = new Intent(this, NotificationCallbackReceiver.class);
 				action.setAction(ACTION_OPEN);
-				if (app.installedPackageName == null)
-					action.putExtra(EXTRA_APP_PACKAGENAME, app.installedName);
-				else
-					action.putExtra(EXTRA_APP_PACKAGENAME, app.installedPackageName);
-
+				action.putExtra(EXTRA_APP_ID, app.id);
+				
 				String title = String.format("Update for %s", app.installedName);
 
 				String text;

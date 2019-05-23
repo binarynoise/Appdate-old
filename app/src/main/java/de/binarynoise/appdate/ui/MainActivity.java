@@ -1,6 +1,7 @@
 package de.binarynoise.appdate.ui;
 
 import android.os.Bundle;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -8,10 +9,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import java.io.IOException;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.app.App;
+import de.binarynoise.appdate.app.AppTemplate;
+import de.binarynoise.appdate.util.Util;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
@@ -19,21 +24,23 @@ import static de.binarynoise.appdate.SFC.sfcm;
  * The Main activity.
  */
 public class MainActivity extends AppCompatActivity implements AppOverviewFragment.OnListFragmentInteractionListener {
+	private static final String TAG = "MainActivity";
 	ViewPager viewPager;
-
+	
 	@Override
 	public void onListFragmentInteraction(App app) {
 		AppDetailActivity.start(getBaseContext(), app);
 	}
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		sfcm.sfc.initalizeIfNotYetInitalized(getApplicationContext());
 		setContentView(R.layout.activity_main);
-
+		
 		Toolbar toolbar = findViewById(R.id.appDetail_toolbar);
 		setSupportActionBar(toolbar);
-
+		
 		FloatingActionButton floatingActionButton = findViewById(R.id.fab);
 		if (floatingActionButton != null)
 			sfcm.sfc.floatingActionButton = floatingActionButton;
@@ -41,21 +48,30 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 			throw new RuntimeException("FloatingActionButton not available, although it should be",
 				new NullPointerException("FloatingActionButton is null"));
 		sfcm.sfc.floatingActionButton.setOnClickListener(v -> viewPager.setCurrentItem(0));
-
+		
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the activity.
 		// The PagerAdapter that will provide fragments for each of the sections.
 		// Set up the ViewPager with the sections adapter.
 		viewPager = findViewById(R.id.container);
 		viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
-
+		
 		TabLayout tabLayout = findViewById(R.id.tabs);
-
+		
 		viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
 		viewPager.setCurrentItem(1);
+		
+		new Thread(() -> {
+			try {
+				for (AppTemplate t : AppTemplate.getAvailableAppTemplates().values())
+					sfcm.sfc.appList.addToList(t);
+			} catch (IOException e) {
+				Util.log(TAG, "fetching templates failed", e, Log.WARN);
+			}
+		}).start();
 	}
-
+	
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -63,23 +79,29 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		sfcm.sfc.mainActivity = this;
 		sfcm.sfc.initalizeIfNotYetInitalized(getApplicationContext());
 	}
-
+	
 	@Override
 	public void onStop() {
 		super.onStop();
 		if (sfcm.sfc.mainActivity == this)
 			sfcm.sfc.mainActivity = null;
-
+		
 		if (sfcm.sfc.floatingActionButton == findViewById(R.id.fab))
 			sfcm.sfc.floatingActionButton = null;
 	}
-
+	
 	@Override
 	protected void onPause() {
 		sfcm.sfc.appList.saveChanges();
 		super.onPause();
 	}
-
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		sfcm.sfc.appList.sortListAndUpdate();
+	}
+	
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
 	 * one of the sections/tabs/pages.
@@ -93,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
 		}
-
+		
 		@Override
 		public Fragment getItem(int position) {
 			switch (position) {
@@ -113,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 					throw new RuntimeException(String.format("Invalid fragment count: %d", position));
 			}
 		}
-
+		
 		@Override
 		public int getCount() { return 3; }
 	}

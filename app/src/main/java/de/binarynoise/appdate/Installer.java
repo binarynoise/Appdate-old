@@ -154,7 +154,7 @@ public class Installer extends BroadcastReceiver {
 		if (extras.containsKey(EXTRA_STATUS_MESSAGE)) {
 			String packageName = extras.getString(EXTRA_PACKAGE_NAME);
 			if (packageName != null) {
-				App app = sfcm.sfc.appList.find(packageName);
+				App app = sfcm.sfc.appList.findByPackageName(packageName);
 				if (app != null)
 					app.onInstallStateChange(extras);
 			}

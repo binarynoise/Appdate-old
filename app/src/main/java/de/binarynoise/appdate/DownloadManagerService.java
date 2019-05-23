@@ -2,27 +2,26 @@ package de.binarynoise.appdate;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Process;
 import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import de.binarynoise.appdate.callbacks.ErrorCallback;
 import de.binarynoise.appdate.callbacks.ProgressCallback;
 import de.binarynoise.appdate.callbacks.ResultCallback;
 import de.binarynoise.appdate.callbacks.SuccessCallback;
 import de.binarynoise.appdate.util.RunningInBackground;
-import de.binarynoise.appdate.util.ServiceHandlerThread;
 import de.binarynoise.appdate.util.Tupel;
 
 public class DownloadManagerService extends Service {
-	private static final String               TAG = "DownloadManagerService";
-	private              ServiceHandlerThread handlerThread;
-	private              Handler              handler;
+	private static final String   TAG                = "DownloadManagerService";
+	private final        Executor threadPoolExecutor = AsyncTask.THREAD_POOL_EXECUTOR;
+	private              MyBinder myBinder;
 	
 	@RunningInBackground
 	public void downloadInBackground(String downloadURLString, File destFolder, ResultCallback<Tupel<String, Long>> resultCallback,
@@ -40,9 +39,7 @@ public class DownloadManagerService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		handlerThread = new ServiceHandlerThread("DownloadManagerHandlerThread", Process.THREAD_PRIORITY_BACKGROUND, this);
-		handlerThread.start();
-		handler = new Handler(handlerThread.getLooper());
+		myBinder = new MyBinder(this);
 	}
 	
 	@Override
@@ -50,27 +47,20 @@ public class DownloadManagerService extends Service {
 		return START_STICKY;
 	}
 	
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		handlerThread.quitSafely();
-	}
-	
 	@Nullable
 	@Override
 	public IBinder onBind(Intent intent) {
-		return null;
+		return myBinder;
 	}
 	
 	public void doInBackground(Runnable runnable) {
-		handler.post(runnable);
+		threadPoolExecutor.execute(runnable);
 	}
 	
 	public static class MyBinder extends Binder {
 		private final DownloadManagerService service;
 		
 		private MyBinder(DownloadManagerService service) {
-			
 			this.service = service;
 		}
 		

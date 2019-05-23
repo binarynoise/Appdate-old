@@ -34,6 +34,7 @@ public class AppOverviewFragment extends Fragment {
 			mListener = (OnListFragmentInteractionListener) context;
 		else
 			throw new RuntimeException(context + " must implement OnListFragmentInteractionListener");
+		sfcm.sfc.appList.sortListAndUpdate();
 	}
 
 	@Override

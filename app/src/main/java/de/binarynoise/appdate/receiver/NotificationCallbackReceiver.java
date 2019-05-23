@@ -10,9 +10,9 @@ import de.binarynoise.appdate.ui.AppDetailActivity;
 import static de.binarynoise.appdate.SFC.sfcm;
 
 public class NotificationCallbackReceiver extends BroadcastReceiver {
-	public static final  String ACTION_OPEN           = "open";
-	public static final  String EXTRA_APP_PACKAGENAME = "packageName";
-	private static final String TAG                   = "NotificationCallback";
+	public static final  String ACTION_OPEN  = "open";
+	public static final  String EXTRA_APP_ID = "packageName";
+	private static final String TAG          = "NotificationCallback";
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -22,11 +22,9 @@ public class NotificationCallbackReceiver extends BroadcastReceiver {
 		
 		String action = intent.getAction();
 		if (ACTION_OPEN.equals(action)) {
-			String id = intent.getStringExtra(EXTRA_APP_PACKAGENAME);
-			if (id != null && !id.isEmpty()) {
-				AppDetailActivity.start(context, id);
-				Log.d(TAG, String.format("started AppDetailActivity for id '%s'", id));
-			}
+			long id = intent.getLongExtra(EXTRA_APP_ID, 0);
+			AppDetailActivity.start(context, id);
+			Log.d(TAG, String.format("started AppDetailActivity for id '%s'", id));
 		}
 	}
 }
