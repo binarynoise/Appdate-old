@@ -9,14 +9,14 @@ import android.content.pm.PackageInstaller.SessionParams;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
 import java.io.*;
 
 import de.binarynoise.appdate.app.App;
+import de.binarynoise.appdate.app.AppList;
+import de.binarynoise.appdate.callbacks.ErrorCallback;
 import de.binarynoise.appdate.util.InstallNotPermittedException;
 import de.binarynoise.appdate.util.Util;
-import de.binarynoise.appdate.util.Version;
 import net.erdfelt.android.apk.AndroidApk;
 
 import static android.content.Intent.EXTRA_INTENT;
@@ -28,122 +28,82 @@ import static de.binarynoise.appdate.SFC.sfcm;
 
 public class Installer extends BroadcastReceiver {
 	@SuppressWarnings("unused") private static final String TAG = "Installer";
-
+	
 	@SuppressWarnings({"resource", "IOResourceOpenedButNotSafelyClosed"})
-	public static void install(App app) {
-		/////////////////////////////////// Preparations
-
-		if (!app.hasUpdates) {
-			app.installUpToDateCallback.onUpToDate();
-			return;
-		}
-
-		if (!app.isDownloadValid()) {
-			app.installErrorCallback.onError(
-				new FileNotFoundException("the downloaded file has either been deleted or is invalid: '" + app.cachePath + "'"));
-			return;
-		}
-
-		File apkfile = new File(app.cachePath);
-		AndroidApk apk;
+	public static void install(File apkfile, ErrorCallback errorCallback) {
 		try {
-			apk = new AndroidApk(apkfile);
+			Context context = sfcm.sfc.getContext();
+			PackageManager packageManager = context.getPackageManager();
+			
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+				errorCallback.onError(new InstallNotPermittedException("No permission to request app installs"));
+				return;
+			}
+			
+			String packageName = new AndroidApk(apkfile).getPackageName();
+			
+			PackageInstaller packageInstaller = packageManager.getPackageInstaller();
+			SessionParams params = new SessionParams(MODE_FULL_INSTALL);
+			
+			int sessionId = packageInstaller.createSession(params);
+			
+			params.setAppPackageName(packageName);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+				params.setInstallReason(INSTALL_REASON_USER);
+			params.setSize(apkfile.length());
+			
+			OutputStream out = null;
+			BufferedInputStream bufIn = null;
+			boolean inOpened = false, outOpened = false;
+			
+			try (PackageInstaller.Session session = packageInstaller.openSession(sessionId)) {
+				out = session.openWrite(packageName + ".apk", 0, apkfile.length());
+				outOpened = true;
+				bufIn = new BufferedInputStream(new FileInputStream(apkfile));
+				inOpened = true;
+				
+				int count;
+				byte[] buffer = new byte[0x100000]; // 1MB
+				while ((count = bufIn.read(buffer)) != -1)
+					out.write(buffer, 0, count);
+				
+				out.flush();
+				session.fsync(out);
+				
+				out.close();
+				outOpened = false;
+				bufIn.close();
+				inOpened = false;
+				
+				Intent intent = new Intent(context, Installer.class);
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				session.commit(PendingIntent.getBroadcast(context, 0, intent, 0).getIntentSender());
+			} finally {
+				if (bufIn != null && inOpened)
+					try {
+						bufIn.close();
+					} catch (IOException ignored) {}
+				if (out != null && outOpened)
+					try {
+						out.close();
+					} catch (IOException ignored) {}
+			}
 		} catch (IOException e) {
-			app.installErrorCallback.onError(e);
-			return;
-		}
-
-		String updatePackageName = apk.getPackageName();
-		if (!updatePackageName.equalsIgnoreCase(app.installedPackageName)) {
-			app.installErrorCallback.onError(new InstallNotPermittedException("Packagename mismatch"));
-			return;
-		}
-
-		app.updateVersion = new Version(apk.getAppVersion());
-		if (app.installedVersion != null && !app.updateVersion.isNewer(app.installedVersion)) {
-			app.installUpToDateCallback.onUpToDate();
-			return;
-		}
-
-		Context context = sfcm.sfc.getContext();
-		PackageManager packageManager = context.getPackageManager();
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
-			app.installErrorCallback.onError(new InstallNotPermittedException("No permission to request app installs"));
-			return;
-		}
-
-		//////////////////////////////// Installing
-
-		String packageName = apk.getPackageName();
-		PackageInstaller packageInstaller = packageManager.getPackageInstaller();
-		SessionParams params = new SessionParams(MODE_FULL_INSTALL);
-
-		int sessionId;
-		try {
-			sessionId = packageInstaller.createSession(params);
-		} catch (IOException e) {
-			app.installErrorCallback.onError(e);
-			return;
-		}
-
-		params.setAppPackageName(packageName);
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-			params.setInstallReason(INSTALL_REASON_USER);
-		params.setSize(apkfile.length());
-
-		byte[] buffer = new byte[0x100000]; // 1MB
-		OutputStream out = null;
-		BufferedInputStream bufIn = null;
-		boolean inOpened = false, outOpened = false;
-
-		try (PackageInstaller.Session session = packageInstaller.openSession(sessionId)) {
-			out = session.openWrite(packageName + ".apk", 0, apkfile.length());
-			outOpened = true;
-			bufIn = new BufferedInputStream(new FileInputStream(apkfile));
-			inOpened = true;
-
-			int count;
-			while ((count = bufIn.read(buffer)) != -1)
-				out.write(buffer, 0, count);
-
-			out.flush();
-			session.fsync(out);
-
-			out.close();
-			outOpened = false;
-			bufIn.close();
-			inOpened = false;
-
-			Intent intent = new Intent(context, Installer.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			session.commit(PendingIntent.getBroadcast(context, 0, intent, 0).getIntentSender());
-		} catch (IOException e) {
-			Log.w(TAG, e);
-			app.installErrorCallback.onError(e);
-		} finally {
-			if (bufIn != null && inOpened)
-				try {
-					bufIn.close();
-				} catch (IOException ignored) {}
-			if (out != null && outOpened)
-				try {
-					out.close();
-				} catch (IOException ignored) {}
+			errorCallback.onError(e);
 		}
 	}
-
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if (intent == null)
 			return;
-
+		
 		Bundle extras = intent.getExtras();
 		if (extras == null)
 			return;
-
-		Util.dumpBundle("BroadcastReciever", extras);
-
+		
+		Util.dumpBundle(TAG, extras);
+		
 		if (extras.containsKey(EXTRA_INTENT)) {
 			Intent intent2 = (Intent) extras.get(EXTRA_INTENT);
 			if (intent2 != null) {
@@ -154,7 +114,7 @@ public class Installer extends BroadcastReceiver {
 		if (extras.containsKey(EXTRA_STATUS_MESSAGE)) {
 			String packageName = extras.getString(EXTRA_PACKAGE_NAME);
 			if (packageName != null) {
-				App app = sfcm.sfc.appList.findByPackageName(packageName);
+				App app = AppList.findByPackageName(packageName);
 				if (app != null)
 					app.onInstallStateChange(extras);
 			}

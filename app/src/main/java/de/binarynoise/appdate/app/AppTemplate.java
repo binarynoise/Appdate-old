@@ -17,7 +17,6 @@ import static de.binarynoise.appdate.SFC.sfcm;
 import static de.binarynoise.appdate.util.GoogleSheetsBridge.getValues;
 import static de.binarynoise.appdate.util.GoogleSheetsBridge.updateValues;
 import static de.binarynoise.appdate.util.Util.log;
-import static de.binarynoise.appdate.util.Util.logPretty;
 
 @SuppressWarnings("WeakerAccess")
 public class AppTemplate implements Comparable<AppTemplate> {
@@ -47,13 +46,12 @@ public class AppTemplate implements Comparable<AppTemplate> {
 	public static Map<String, AppTemplate> getAvailableAppTemplates() throws IOException {
 		donwloadList();
 		
-		AppList appList = sfcm.sfc.appList;
 		HashMap<String, AppTemplate> available = new HashMap<>();
 		
 		for (Map.Entry<String, AppTemplate> entry : appTemplates.entrySet()) {
 			AppTemplate at = entry.getValue();
 			boolean installed = at.isInstalled();
-			App app = appList.findByPackageName(at.packageName);
+			App app = AppList.findByPackageName(at.packageName);
 			
 			if (installed && app == null)
 				available.put(entry.getKey(), at);
@@ -64,7 +62,7 @@ public class AppTemplate implements Comparable<AppTemplate> {
 	
 	@RunInBackground
 	public static void updateAppTemplates() throws IOException {
-		App[] apps = sfcm.sfc.appList.getAll();
+		App[] apps = AppList.getAll();
 		
 		for (App app : apps)
 			if (app.installedPackageName != null && app.isInstalled()) {
@@ -102,8 +100,11 @@ public class AppTemplate implements Comparable<AppTemplate> {
 		for (AppTemplate appTemplate : appTemplates.values())
 			values.add(appTemplate.asEntryRow());
 		
-		logPretty(TAG, appTemplates, Log.DEBUG);
-		logPretty(TAG, values, Log.DEBUG);
+		Collections.sort(values, (o1, o2) -> {
+			String s1 = (String) o1.get(0);
+			String s2 = (String) o2.get(0);
+			return s1.compareTo(s2);
+		});
 		
 		updateValues(values);
 		appTemplatesOnServer.clear();
@@ -113,13 +114,13 @@ public class AppTemplate implements Comparable<AppTemplate> {
 	
 	@Nullable
 	private static AppTemplate fromEntryRow(List<Object> row) {
-		String packageName = (String) row.get(0);
-		String name = (String) row.get(1);
-		String url = (String) row.get(2);
-		
 		try {
+			String packageName = (String) row.get(0);
+			String name = (String) row.get(1);
+			String url = (String) row.get(2);
+			
 			return new AppTemplate(packageName, name, url);
-		} catch (MalformedURLException e) {
+		} catch (MalformedURLException | IndexOutOfBoundsException | ClassCastException e) {
 			log(TAG, "Could not create App from Template", e, Log.WARN);
 			return null;
 		}

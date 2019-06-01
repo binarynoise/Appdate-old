@@ -33,23 +33,20 @@ public class SFC {
 	public final        StaticFieldsContainer sfc  = new StaticFieldsContainer();
 	
 	public static class StaticFieldsContainer {
-		private static final int                    JOB_ID         = 123456789;
-		private static final String                 TAG            = "SFC";
-		public final         AppList                appList        = new AppList();
-		@Nullable public     FloatingActionButton   floatingActionButton;
-		@Nullable public     AddAppFragment         addAppFragment;
-		@Nullable public     AppOverviewFragment    appOverviewFragment;
-		@Nullable public     PreferencesFragment    preferencesFragment;
-		@Nullable public     MainActivity           mainActivity;
-		@Nullable public     UpdateSchedulerService backgroundService;
-		@Nullable public     DownloadManager        downloadManager;
-		private              Context                context;
-		private volatile     boolean                shallInitalize = true;
+		private static final int                  JOB_ID         = 123456789;
+		private static final String               TAG            = "SFC";
+		@Nullable public     FloatingActionButton floatingActionButton;
+		@Nullable public     AddAppFragment       addAppFragment;
+		@Nullable public     AppOverviewFragment  appOverviewFragment;
+		@Nullable public     PreferencesFragment  preferencesFragment;
+		@Nullable public     MainActivity         mainActivity;
+		private              Context              context;
+		private volatile     boolean              shallInitalize = true;
 		
 		public void initalizeIfNotYetInitalized(Context applicationContext) {
 			if (shallInitalize) {
 				context = applicationContext;
-				appList.load();
+				AppList.load();
 				
 				new Thread(() -> {
 					JobInfo jobInfo =
@@ -63,27 +60,13 @@ public class SFC {
 					if (jobScheduler != null)
 						jobScheduler.schedule(jobInfo);
 					
-					getContext().startService(new Intent(context, DownloadManagerService.class));
-					
 					checkPermissions();
+					
+					preloadInstalledAppLabels();
 				}).start();
 				
-				Util.log(TAG, "init completed", Log.DEBUG);
 				shallInitalize = false;
 			}
-		}
-		
-		public void checkPermissions() {
-			PackageManager packageManager = context.getPackageManager();
-			List<PackageInfo> installedPackages = packageManager.getInstalledPackages(0);
-			List<PackageInfo> userPackages = new ArrayList<>();
-			
-			for (PackageInfo installedPackage : installedPackages)
-				if (!appFilterPattern.matcher(installedPackage.packageName).matches())
-					userPackages.add(installedPackage);
-			
-			if (userPackages.size() == 1)
-				Util.toast(sfcm.sfc.getContext(), "Please grant permission to read installed packages", Toast.LENGTH_LONG);
 		}
 		
 		@NonNull
@@ -97,8 +80,34 @@ public class SFC {
 			this.context = context;
 		}
 		
-		boolean isContextSet() {
-			return context == null;
+		private void checkPermissions() {
+			PackageManager packageManager = context.getPackageManager();
+			List<PackageInfo> installedPackages = packageManager.getInstalledPackages(0);
+			List<PackageInfo> userPackages = new ArrayList<>();
+			
+			for (PackageInfo installedPackage : installedPackages)
+				if (!appFilterPattern.matcher(installedPackage.packageName).matches())
+					userPackages.add(installedPackage);
+			
+			if (userPackages.size() <= 1) {
+				Util.toastAndLog(sfcm.sfc.getContext(), TAG, "Please grant permission to read installed packages", Toast.LENGTH_LONG,
+					Log.WARN);
+				
+				// most likely the permission isn't "granted" by XPrivacyLua, so we'll try to open it
+				// that the user can revoke the restriction
+				Intent intent = new Intent(Intent.ACTION_MAIN);
+				intent.setComponent(ComponentName.unflattenFromString("eu.faircode.xlua/.ActivityMain"));
+				intent.addCategory(Intent.CATEGORY_LAUNCHER);
+				intent.putExtra("package", context.getPackageName());
+				context.startActivity(intent);
+			}
+		}
+		
+		private void preloadInstalledAppLabels() {
+			PackageManager pm = context.getPackageManager();
+			List<PackageInfo> installedPackages = pm.getInstalledPackages(0);
+			for (PackageInfo packageInfo : installedPackages)
+				AddAppFragment.getAppName(pm, packageInfo);
 		}
 	}
 }

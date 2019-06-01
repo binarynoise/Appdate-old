@@ -22,6 +22,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
+@SuppressWarnings("deprecation")
 public class GoogleSheetsBridge {
 	private static final String           applicationName = "Appdate";
 	private static final String           spreadsheetId   = "1cq4gZLevu0hPIcaP6Z4Hp46hrmH47R7Zd83XSNNKp3g";
@@ -29,6 +30,7 @@ public class GoogleSheetsBridge {
 	private static final HttpTransport    httpTransport;
 	private static final JsonFactory      jsonFactory     = JacksonFactory.getDefaultInstance();
 	private static final Sheets           sheets;
+	private static final String           TAG             = "GoogleSheetsBridge";
 	private static       GoogleCredential credential;
 	
 	static {
@@ -64,8 +66,7 @@ public class GoogleSheetsBridge {
 		List<String> scopes = new ArrayList<>();
 		scopes.add("https://www.googleapis.com/auth/cloud-platform");
 		scopes.addAll(SheetsScopes.all());
-		credential = GoogleCredential.fromStream(new ByteArrayInputStream("".getBytes()), httpTransport, jsonFactory)
-			.createScoped(scopes);
+		credential = GoogleCredential.fromStream(new ByteArrayInputStream("".getBytes()), httpTransport, jsonFactory).createScoped(scopes);
 	}
 	
 	@RunInBackground

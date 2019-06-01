@@ -11,4 +11,3 @@ settings.gradle
 **/build/
 **/release/
 **/keystore/
-**/auth/

@@ -2,7 +2,6 @@ package de.binarynoise.appdate.ui;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -27,6 +26,7 @@ import java.util.regex.Pattern;
 
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.app.App;
+import de.binarynoise.appdate.app.AppList;
 import de.binarynoise.appdate.util.RunningInBackground;
 import de.binarynoise.appdate.util.TextChangedListener;
 import de.binarynoise.appdate.util.Util;
@@ -39,24 +39,31 @@ import static de.binarynoise.appdate.util.Util.toastAndLog;
  * A simple {@link Fragment} subclass.
  */
 public class AddAppFragment extends Fragment {
-	public static final  Pattern          appFilterPattern =
+	public static final  Pattern                   appFilterPattern =
 		Pattern.compile("^((com\\.|org\\.)?(google|android|cyanogenmod|lineage)).*$");
-	private static final Pattern          urlFilterPattern = Pattern.compile("\\s");
-	private static final String           TAG              = "AddApp";
-	private static final String           PACKAGE_NAME     = "packageName";
-	private static final String           PACKAGE_INFO     = "packageInfo";
-	@Nullable private    App              tempApp;
-	private              PackageInfo      tempInfo;
-	private              View             myView;
-	private              EditText         nameView;
-	private              EditText         urlView;
-	private              Spinner          packagenamespinner;
-	private              TextView         packageName;
-	private              Button           addButton;
-	private              Button           testButton;
-	private              CheckBox         installedCheckBox;
-	private              ConstraintLayout packageDetailContainer;
-	private              ProgressBar      testButtonProgressBar;
+	private static final Map<String, CharSequence> packageNames     = new HashMap<>();
+	private static final Pattern                   urlFilterPattern = Pattern.compile("\\s");
+	private static final String                    TAG              = "AddApp";
+	private static final String                    PACKAGE_NAME     = "packageName";
+	private static final String                    PACKAGE_INFO     = "packageInfo";
+	@Nullable private    App                       tempApp;
+	private              PackageInfo               tempInfo;
+	private              View                      myView;
+	private              EditText                  nameView;
+	private              EditText                  urlView;
+	private              Spinner                   packagenamespinner;
+	private              TextView                  packageName;
+	private              Button                    addButton;
+	private              Button                    testButton;
+	private              CheckBox                  installedCheckBox;
+	private              ConstraintLayout          packageDetailContainer;
+	private              ProgressBar               testButtonProgressBar;
+	
+	public static String getAppName(PackageManager pm, PackageInfo info) {
+		if (!packageNames.containsKey(info.packageName))
+			packageNames.put(info.packageName, info.applicationInfo.loadLabel(pm));
+		return String.valueOf(packageNames.get(info.packageName));
+	}
 	
 	@Override
 	public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -242,7 +249,7 @@ public class AddAppFragment extends Fragment {
 		if (tempApp == null || tempApp.installedName.isEmpty())
 			toast(view.getContext(), getString(R.string.err_emptyName), Toast.LENGTH_SHORT);
 		else {
-			sfcm.sfc.appList.addToList(tempApp);
+			AppList.addToList(tempApp);
 			tempApp = null;
 			urlView.setText("");
 			nameView.setText("");
@@ -276,9 +283,7 @@ public class AddAppFragment extends Fragment {
 		PackageManager pm = context.getPackageManager();
 		List<PackageInfo> installedPackages = pm.getInstalledPackages(0);
 		
-		ApplicationInfo.DisplayNameComparator displayNameComparator = new ApplicationInfo.DisplayNameComparator(pm);
-		
-		Collections.sort(installedPackages, (o1, o2) -> displayNameComparator.compare(o1.applicationInfo, o2.applicationInfo));
+		Collections.sort(installedPackages, (o1, o2) -> getAppName(pm, o1).compareTo(getAppName(pm, o2)));
 		
 		List<Map<String, Object>> hints = new ArrayList<>();
 		for (PackageInfo packageInfo : installedPackages)

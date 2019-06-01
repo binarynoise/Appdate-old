@@ -11,13 +11,16 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Looper;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -33,11 +36,11 @@ import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.O;
 import static de.binarynoise.appdate.SFC.sfcm;
 
-@SuppressWarnings({"StaticMethodOnlyUsedInOneClass", "ClassNamePrefixedWithPackageName"})
+@SuppressWarnings({"StaticMethodOnlyUsedInOneClass", "ClassNamePrefixedWithPackageName", "WeakerAccess"})
 public final class Util {
-	public static final  Gson gson;
-	public static final  Gson prettyGson;
-	private static final int  NOTIFICATION_ID = 12345689;
+	public static final  Gson          gson;
+	public static final  Gson          prettyGson;
+	private static final HandlerThread handlerThread = new HandlerThread("Util");
 	
 	static {
 		gson = new GsonBuilder()
@@ -50,6 +53,7 @@ public final class Util {
 			.setPrettyPrinting()
 			.disableHtmlEscaping()
 			.create();
+		handlerThread.start();
 	}
 	
 	@SuppressWarnings("NumericCastThatLosesPrecision")
@@ -77,15 +81,7 @@ public final class Util {
 	}
 	
 	public static void toast(Context context, CharSequence text, int duration) {
-		new Thread(() -> {
-			Looper.prepare();
-			
-			Toast toast = Toast.makeText(context, text, duration);
-			toast.show();
-			
-			Looper.loop();
-			Looper.getMainLooper().quitSafely();
-		}).start();
+		new Handler(handlerThread.getLooper()).post(() -> Toast.makeText(context, text, duration).show());
 	}
 	
 	public static void log(String tag, CharSequence text, Throwable t, int level) {
@@ -101,14 +97,14 @@ public final class Util {
 	}
 	
 	@SuppressWarnings("deprecation")
-	public static void notification(Drawable icon, CharSequence title, CharSequence text, Intent action) {
+	public static void notification(int id, Drawable icon, CharSequence title, CharSequence text, Intent action) {
 		Context context = sfcm.sfc.getContext();
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 		if (notificationManager != null) {
 			PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, action, 0);
 			Notification.Builder builder = new Notification.Builder(context);
 			builder.setContentText(text);
-//			builder.setAutoCancel(true);
+			builder.setAutoCancel(true);
 			builder.setStyle(new Notification.BigTextStyle().bigText(text));
 			builder.setLargeIcon(drawableToBitmap(icon));
 			builder.setSmallIcon(R.drawable.ic_update_white_24dp);
@@ -117,7 +113,7 @@ public final class Util {
 			
 			Notification notification = builder.build();
 			
-			notificationManager.notify(NOTIFICATION_ID, notification);
+			notificationManager.notify(id, notification);
 		}
 	}
 	
@@ -158,6 +154,10 @@ public final class Util {
 		return SDK_INT >= O ?
 			DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).format(Instant.ofEpochMilli(instant)) :
 			DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault()).format(new Date(instant));
+	}
+	
+	public static String toAbsolutePath(URL base, String rel) throws MalformedURLException {
+		return !rel.isEmpty() && rel.charAt(0) == '/' ? new URL(base, rel).toString() : rel;
 	}
 	
 	static class UriDeserializer implements JsonDeserializer<Uri> {

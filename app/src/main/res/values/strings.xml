@@ -3,38 +3,36 @@
 	<string name="tab_text_1">Add App</string>
 	<string name="tab_text_2">Overview</string>
 	<string name="tab_text_3">Settings</string>
-	<string name="err_no_prefs_yet">There are no preferences yet</string>
 	
 	<string name="updateUrl">URL</string>
 	<string name="name">name</string>
 	<string name="last_updated">last updated</string>
 	<string name="version">version</string>
 	
+	<string name="err_no_prefs_yet">There are no preferences yet</string>
 	<string name="err_invalidURL">URL is not valid. App could not be added.</string>
-	<string name="err_noReleases">The app has no releases yet.</string>
 	<string name="err_emptyUrl">The URL should not be empty.</string>
 	<string name="err_emptyName">The name should not be empty.</string>
+	<string name="err_noReleases">No releases could be found.</string>
+	<string name="err_downloadFailed">Download of app %s failed</string>
+	<string name="err_installFailed">Installation of app %s failed</string>
+	<string name="err_updateFailed">App update failed:</string>
 	
-	<string name="addApp_test">test config</string>
-	<string name="addApp_testSucceed">Test successful! Your app has the version \'%s\'.</string>
-	<string name="addApp_testFailed">"Test failed: "</string>
 	<string name="addApp_description">Here you can add a new app from GitHub</string>
+	<string name="addApp_test">test config</string>
+	<string name="addApp_testSucceed">Test successful! Your app has the version ‘%s’.</string>
+	<string name="addApp_testFailed">"Test failed: "</string>
 	<string name="addApp_appInstalled_checkbox">App already installed?</string>
 	<string name="addApp_add">add app</string>
 	
 	<string name="appDetail_description">Here you can see and edit the details of the selected app</string>
 	<string name="appDetail_apply">Apply</string>
 	<string name="appDetail_back">Back</string>
-	
 	<string name="appDetail_alertDelete_header">Delete app</string>
 	<string name="appDetail_alertDelete_content">Are you sure to delete this app?</string>
-	
 	<string name="appDetail_installSuccess">Installation of app %s succeeded!</string>
-	<string name="appDetail_installFailed">Installation of app %s failed</string>
 	<string name="appDetail_downloadSuccess">Download of app %s succeeded!</string>
-	<string name="appDetail_downloadFailed">Download of app %s failed</string>
 	<string name="appDetail_updateAvailable">Update available</string>
-	<string name="appDetail_updateFailed">App update failed:</string>
 	<string name="appDetail_updateUpToDate">App is already up-to-date</string>
 
 </resources>

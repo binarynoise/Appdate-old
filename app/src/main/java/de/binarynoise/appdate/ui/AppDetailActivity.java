@@ -16,6 +16,7 @@ import java.io.IOException;
 
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.app.App;
+import de.binarynoise.appdate.app.AppList;
 import de.binarynoise.appdate.util.RunningInBackground;
 import de.binarynoise.appdate.util.TextChangedListener;
 
@@ -55,10 +56,10 @@ public class AppDetailActivity extends AppCompatActivity {
 	@Deprecated
 	public static void start(Context context, String packageName) {
 		if (packageName != null && !packageName.isEmpty())
-			start(context, sfcm.sfc.appList.findByPackageName(packageName));
+			start(context, AppList.findByPackageName(packageName));
 	}
 	
-	public static void start(Context context, long id) {
+	public static void start(Context context, int id) {
 		if (id != 0) {
 			Intent starter = new Intent(context, AppDetailActivity.class);
 			starter.putExtra(EXTRA_APP, id);
@@ -81,9 +82,9 @@ public class AppDetailActivity extends AppCompatActivity {
 			return;
 		}
 		
-		long id = getIntent().getLongExtra(EXTRA_APP, 0);
+		int id = getIntent().getIntExtra(EXTRA_APP, 0);
 		//noinspection ConstantConditions
-		app = sfcm.sfc.appList.findById(id);
+		app = AppList.findById(id);
 		
 		if (app == null) {
 			finish();
@@ -105,7 +106,9 @@ public class AppDetailActivity extends AppCompatActivity {
 		nameView.addTextChangedListener(new TextChangedListener() {
 			@Override
 			public void onTextChange(String s) {
-				applyButton.setEnabled(!s.isEmpty());
+				if (app.isInstalled() && !s.equals(app.installedName))
+					nameView.setText(app.installedName);
+				applyButton.setEnabled(!s.isEmpty() && !s.equals(app.installedName));
 			}
 		});
 		
@@ -155,7 +158,7 @@ public class AppDetailActivity extends AppCompatActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		sfcm.sfc.appList.saveChanges();
+		AppList.saveChanges();
 	}
 	
 	@RunningInBackground
@@ -172,7 +175,7 @@ public class AppDetailActivity extends AppCompatActivity {
 						toast(this, getString(R.string.appDetail_updateUpToDate), Toast.LENGTH_SHORT);
 				}
 			} catch (IOException e) {
-				toastAndLog(this, TAG, getString(R.string.appDetail_updateFailed), e, Toast.LENGTH_SHORT, Log.WARN);
+				toastAndLog(this, TAG, getString(R.string.err_updateFailed), e, Toast.LENGTH_SHORT, Log.WARN);
 			}
 			runOnUiThread(() -> enableButtonRow(true));
 		}).start();
@@ -182,38 +185,38 @@ public class AppDetailActivity extends AppCompatActivity {
 		if (app == null)
 			return;
 		
-		app.downloadSuccessCallback = () -> {
+		app.setDownloadSuccessCallback(() -> {
 			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.appDetail_downloadSuccess)), app.installedName),
 				Toast.LENGTH_SHORT, Log.DEBUG);
 			enableButtonRow(true);
-		};
+		});
 		
-		app.downloadErrorCallback = e -> {
+		app.setDownloadErrorCallback(e -> {
 			Log.w(TAG, e);
-			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.appDetail_downloadFailed)), app.installedName), e,
+			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.err_downloadFailed)), app.installedName), e,
 				Toast.LENGTH_SHORT, Log.WARN);
 			enableButtonRow(true);
-		};
+		});
 		
-		app.downloadProgressCallback = this::setProgressBar;
+		app.setDownloadProgressCallback(this::setProgressBar);
 		
-		app.installSuccessCallback = () -> {
+		app.setInstallSuccessCallback(() -> {
 			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.appDetail_installSuccess)), app.installedName),
 				Toast.LENGTH_SHORT, Log.DEBUG);
 			enableButtonRow(true);
-		};
+		});
 		
-		app.installUpToDateCallback = () -> {
+		app.setInstallUpToDateCallback(() -> {
 			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.appDetail_updateUpToDate)), app.installedName),
 				Toast.LENGTH_SHORT, Log.DEBUG);
 			enableButtonRow(true);
-		};
+		});
 		
-		app.installErrorCallback = e -> {
-			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.appDetail_installFailed)), app.installedName), e,
+		app.setInstallErrorCallback(e -> {
+			toastAndLog(this, TAG, String.format(String.valueOf(getText(R.string.err_installFailed)), app.installedName), e,
 				Toast.LENGTH_LONG, Log.WARN);
 			enableButtonRow(true);
-		};
+		});
 	}
 	
 	private void onDeleteButtonClick() {
@@ -228,7 +231,6 @@ public class AppDetailActivity extends AppCompatActivity {
 			})
 			.setNegativeButton(android.R.string.no, (dialog, which) -> enableButtonRow(true))
 			.setOnCancelListener(dialog -> enableButtonRow(true))
-//			.setNeutralButton("Cache file only", (dialog, which) -> app.deleteCacheFile())
 			.setIcon(android.R.drawable.ic_dialog_alert)
 			.show();
 	}
@@ -255,13 +257,16 @@ public class AppDetailActivity extends AppCompatActivity {
 			runOnUiThread(() -> {
 				updateDebugView();
 				applyButton.setEnabled(false);
-				sfcm.sfc.appList.saveChanges();
+				AppList.saveChanges();
 			});
 		}).start();
 	}
 	
 	private void updateDebugView() {
-		runOnUiThread(() -> debugView.setText(prettyGson.toJson(app)));
+		if (sfcm.sfc.getContext().getPackageName().endsWith(".dev"))
+			runOnUiThread(() -> debugView.setText(prettyGson.toJson(app)));
+		else
+			runOnUiThread(() -> debugView.setVisibility(GONE));
 	}
 	
 	private void enableButtonRow(boolean enabled) {

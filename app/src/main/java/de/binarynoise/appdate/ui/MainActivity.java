@@ -15,6 +15,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.app.App;
+import de.binarynoise.appdate.app.AppList;
 import de.binarynoise.appdate.app.AppTemplate;
 import de.binarynoise.appdate.util.Util;
 
@@ -38,8 +39,10 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		sfcm.sfc.initalizeIfNotYetInitalized(getApplicationContext());
 		setContentView(R.layout.activity_main);
 		
-		Toolbar toolbar = findViewById(R.id.appDetail_toolbar);
+		Toolbar toolbar = findViewById(R.id.mainActivity_toolbar);
 		setSupportActionBar(toolbar);
+		if (getPackageName().endsWith(".dev"))
+			toolbar.setTitle(toolbar.getTitle() + ".dev");
 		
 		FloatingActionButton floatingActionButton = findViewById(R.id.fab);
 		if (floatingActionButton != null)
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		new Thread(() -> {
 			try {
 				for (AppTemplate t : AppTemplate.getAvailableAppTemplates().values())
-					sfcm.sfc.appList.addToList(t);
+					AppList.addToList(t);
 			} catch (IOException e) {
 				Util.log(TAG, "fetching templates failed", e, Log.WARN);
 			}
@@ -92,14 +95,14 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 	
 	@Override
 	protected void onPause() {
-		sfcm.sfc.appList.saveChanges();
+		AppList.saveChanges();
 		super.onPause();
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
-		sfcm.sfc.appList.sortListAndUpdate();
+		AppList.sortListAndUpdate();
 	}
 	
 	/**
