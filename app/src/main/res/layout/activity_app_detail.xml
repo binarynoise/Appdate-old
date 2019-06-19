@@ -205,8 +205,8 @@
 	
 	<ScrollView
 		android:layout_height="0dp"
-		android:layout_width="match_parent"
-		app:layout_constraintBottom_toTopOf="@+id/tableRow"
+		android:layout_width="0dp"
+		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toBottomOf="@id/appDetail_progressBar"
@@ -216,6 +216,7 @@
 			android:layout_height="wrap_content"
 			android:layout_width="match_parent"
 			android:padding="8dp"
+			tools:ignore="Deprecated"
 			>
 			
 			<TextView
@@ -238,19 +239,39 @@
 				android:layout_marginStart="8dp"
 				android:layout_marginTop="8dp"
 				android:layout_width="0dp"
-				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintEnd_toStartOf="@+id/appDetail_icon"
 				app:layout_constraintStart_toStartOf="parent"
 				app:layout_constraintTop_toBottomOf="@+id/appDetail_describtion"
 				>
 				
 				<com.google.android.material.textfield.TextInputEditText
+					android:editable="false"
 					android:hint="@string/name"
 					android:id="@+id/appDetail_name"
-					android:inputType="text"
+					android:inputType="none"
 					android:layout_height="wrap_content"
 					android:layout_width="match_parent"
+					android:text=" "
+					tools:text="Appdate"
 					/>
+			
 			</com.google.android.material.textfield.TextInputLayout>
+			
+			<ImageView
+				android:adjustViewBounds="true"
+				android:id="@+id/appDetail_icon"
+				android:layout_height="0dp"
+				android:layout_marginBottom="8dp"
+				android:layout_marginEnd="8dp"
+				android:layout_weight="1"
+				android:layout_width="wrap_content"
+				app:layout_constraintBottom_toBottomOf="@+id/appDetail_name_float"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintTop_toTopOf="@+id/appDetail_name_float"
+				app:srcCompat="@android:color/transparent"
+				tools:layout_width="48dp"
+				tools:srcCompat="@tools:sample/avatars"
+				/>
 			
 			<com.google.android.material.textfield.TextInputLayout
 				android:id="@+id/appDetail_url_float"
@@ -271,6 +292,8 @@
 					android:inputType="none"
 					android:layout_height="wrap_content"
 					android:layout_width="match_parent"
+					android:text=" "
+					tools:text="github.com/..."
 					/>
 			</com.google.android.material.textfield.TextInputLayout>
 			
@@ -293,50 +316,76 @@
 					android:inputType="none"
 					android:layout_height="wrap_content"
 					android:layout_width="match_parent"
-					app:layout_constraintTop_toBottomOf="@+id/appDetail_url"
+					android:text=" "
+					tools:text="01.01.2005"
 					/>
 			</com.google.android.material.textfield.TextInputLayout>
+			
+			<TableRow
+				android:id="@+id/appDetail_versionRow"
+				android:layout_height="wrap_content"
+				android:layout_marginEnd="8dp"
+				android:layout_marginStart="8dp"
+				android:layout_width="0dp"
+				app:layout_constraintEnd_toEndOf="parent"
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/appDetail_last_updated_float"
+				>
+				
+				<com.google.android.material.textfield.TextInputLayout
+					android:id="@+id/appDetail_installedVersion_float"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:layout_width="match_parent"
+					>
+					
+					<com.google.android.material.textfield.TextInputEditText
+						android:editable="false"
+						android:hint="@string/version_installed"
+						android:id="@+id/appDetail_installedVersion"
+						android:inputType="none"
+						android:layout_height="wrap_content"
+						android:layout_width="match_parent"
+						android:text=" "
+						tools:text="1.0"
+						/>
+				</com.google.android.material.textfield.TextInputLayout>
+				
+				<com.google.android.material.textfield.TextInputLayout
+					android:id="@+id/appDetail_updateVersion_float"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:layout_width="match_parent"
+					android:visibility="gone"
+					tools:visibility="visible"
+					>
+					
+					<com.google.android.material.textfield.TextInputEditText
+						android:editable="false"
+						android:hint="@string/version_available"
+						android:id="@+id/appDetail_updateVersion"
+						android:inputType="none"
+						android:layout_height="wrap_content"
+						android:layout_width="match_parent"
+						tools:text="1.1"
+						/>
+				</com.google.android.material.textfield.TextInputLayout>
+			
+			</TableRow>
 			
 			<TextView
 				android:id="@+id/appDetail_textView"
 				android:layout_height="wrap_content"
+				android:layout_marginBottom="8dp"
 				android:layout_marginTop="8dp"
 				android:layout_width="match_parent"
-				app:layout_constraintTop_toBottomOf="@id/appDetail_last_updated_float"
+				android:textIsSelectable="true"
+				app:layout_constraintBottom_toBottomOf="parent"
+				app:layout_constraintTop_toBottomOf="@id/appDetail_versionRow"
 				tools:layout_editor_absoluteX="16dp"
 				tools:text="{\n\tJSON\n}"
 				/>
+		
 		</androidx.constraintlayout.widget.ConstraintLayout>
 	</ScrollView>
-	
-	<TableRow
-		android:id="@+id/tableRow"
-		android:layout_height="wrap_content"
-		android:layout_width="match_parent"
-		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
-		style="?android:attr/buttonBarStyle"
-		>
-		
-		<Button
-			android:enabled="false"
-			android:id="@+id/appDetail_applyButton"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:layout_width="wrap_content"
-			android:text="@string/appDetail_apply"
-			style="?android:attr/buttonBarButtonStyle"
-			/>
-		
-		<Button
-			android:id="@+id/appDetail_cancelButton"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:layout_width="wrap_content"
-			android:text="@string/appDetail_back"
-			style="?android:attr/buttonBarButtonStyle"
-			/>
-	</TableRow>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

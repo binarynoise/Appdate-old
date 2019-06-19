@@ -1,29 +1,35 @@
 package de.binarynoise.appdate.app;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.reflect.TypeToken;
+import de.binarynoise.appdate.ui.AppOverviewFragment;
 import de.binarynoise.appdate.util.RunInBackground;
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static de.binarynoise.appdate.SFC.sfcm;
-import static de.binarynoise.appdate.util.Util.gson;
-import static de.binarynoise.appdate.util.Util.log;
+import static de.binarynoise.appdate.receiver.NotificationCallbackReceiver.*;
+import static de.binarynoise.appdate.util.Util.*;
 
 public class AppList {
-	private static final    String    SHAREDPREFSAPPLISTLABEL = "appList";
-	private static final    String    TAG                     = "AppList";
-	private static final    App[]     EMPTY_APP_ARRAY         = new App[0];
-	private static final    List<App> appList                 = Collections.synchronizedList(new ArrayList<>());
+	private static final    String        SHAREDPREFSAPPLISTLABEL = "appList";
+	private static final    String        TAG                     = "AppList";
+	private static final    App[]         EMPTY_APP_ARRAY         = new App[0];
+	private static final    List<App>     appList                 = Collections.synchronizedList(new ArrayList<>());
 	@SuppressWarnings("RedundantFieldInitialization") //
-	private static volatile boolean   changed                 = false;
+	private static volatile boolean       changed                 = false;
+	private static final    ReentrantLock lock                    = new ReentrantLock(true);
 	
 	@SuppressWarnings("UnstableApiUsage")
 	public static void load() {
@@ -55,30 +61,42 @@ public class AppList {
 		return appList.get(i);
 	}
 	
-	public static void addToList(App app) {
-		appList.add(app);
+	public static void addToList(@NonNull App app) {
+		// to prevent duplicate apps
+		App old = findByPackageName(app.installedPackageName);
+		if (old != null)
+			old.delete();
+		
+		lock.lock();
+		try {
+			appList.add(app);
+		} finally {
+			lock.unlock();
+		}
 		changed = true;
 		sortListAndUpdate(true);
 	}
 	
 	@RunInBackground
 	public static void addToList(AppTemplate appTemplate) throws IOException {
-		appList.add(new App(appTemplate));
+		App app = new App(appTemplate);
+		lock.lock();
+		try {
+			appList.add(app);
+		} finally {
+			lock.unlock();
+		}
 		changed = true;
 		sortListAndUpdate(false);
 	}
 	
-	public static void removeFromList(App app) {
-		appList.remove(app);
-		changed = true;
-		sortListAndUpdate(true);
-	}
-	
 	@SuppressWarnings("ObjectAllocationInLoop")
 	@Nullable
-	public static App findByPackageName(String packageName) {
+	public static App findByPackageName(@Nullable String packageName) {
+		if (packageName == null)
+			return null;
 		for (App app : appList)
-			if (app.installedPackageName != null && app.installedPackageName.equalsIgnoreCase(packageName))
+			if (packageName.equalsIgnoreCase(app.installedPackageName))
 				return app;
 		
 		return null;
@@ -93,7 +111,56 @@ public class AppList {
 		return null;
 	}
 	
-	public static App[] getAll() {
+	public static void checkForUpdates() {
+		AppOverviewFragment.setRefreshing(true);
+		lock.lock();
+		try {
+			for (App app : appList) {
+				try {
+					app.checkForUpdates();
+				} catch (IOException ignored) {}
+				if (app.hasUpdates) {
+					NotificationActionWithExtras extras = new NotificationActionWithExtras();
+					extras.put(EXTRA_APP_ID, app.id);
+					extras.put(ACTION, ACTION_OPEN_APP_DETAIL);
+					Intent action = extras.toIntent(sfcm.sfc.getContext());
+					
+					String title = String.format("Update for %s", app.installedName);
+					
+					String text;
+					if (app.isInstalled())
+						text = String.format(
+							"Appdate has found an update for app %s.\nThe currently installed Version is %s\nThe available version is %s",
+							app.installedName, app.installedVersion, app.updateVersion);
+					else
+						text = String.format("Appdate can install app %s.\nThe available version is %s", app.installedName,
+							app.updateVersion);
+					
+					Drawable drawable = app.getIcon();
+					
+					int id = app.id;
+					notification(id, drawable, title, text, action);
+				}
+			}
+			saveChanges();
+			AppOverviewFragment.setRefreshing(false);
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	static void removeFromList(App app) {
+		lock.lock();
+		try {
+			appList.remove(app);
+		} finally {
+			lock.unlock();
+		}
+		changed = true;
+		sortListAndUpdate(true);
+	}
+	
+	static App[] getAll() {
 		return appList.toArray(EMPTY_APP_ARRAY);
 	}
 	
@@ -125,12 +192,15 @@ public class AppList {
 	}
 	
 	private static void upload() {
-		new Thread(() -> {
-			try {
-				AppTemplate.updateAppTemplates();
-			} catch (IOException e) {
-				log(TAG, "could not upload templates", e, Log.WARN);
-			}
-		}).start();
+		if (lock.tryLock()) {
+			new Thread(() -> {
+				try {
+					AppTemplate.updateAppTemplates();
+				} catch (IOException e) {
+					log(TAG, "could not upload templates", e, Log.WARN);
+				}
+			}).start();
+			lock.unlock();
+		}
 	}
 }

@@ -1,42 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
-	android:background="@android:drawable/bottom_bar"
-	android:backgroundTint="@color/colorPrimary"
-	android:backgroundTintMode="add"
+	android:id="@+id/appOverview_list_container"
 	android:layout_height="wrap_content"
 	android:layout_width="match_parent"
-	android:padding="16dp"
-	android:paddingBottom="0dp"
+	tools:context=".ui.AppOverviewFragment$AppOverviewListItem"
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	>
 	
+	<ProgressBar
+		android:id="@+id/appOverview_list_icon_placeholder"
+		android:layout_height="0dp"
+		android:layout_width="0dp"
+		app:layout_constraintBottom_toBottomOf="@id/appOverview_list_icon"
+		app:layout_constraintEnd_toEndOf="@id/appOverview_list_icon"
+		app:layout_constraintStart_toStartOf="@id/appOverview_list_icon"
+		app:layout_constraintTop_toTopOf="@id/appOverview_list_icon"
+		style="?android:attr/progressBarStyle"
+		tools:visibility="gone"
+		/>
+	
+	<ImageView
+		android:background="@android:color/transparent"
+		android:id="@+id/appOverview_list_icon"
+		android:layout_height="48dp"
+		android:layout_marginBottom="8dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="8dp"
+		android:layout_width="48dp"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent"
+		app:srcCompat="@android:color/transparent"
+		tools:srcCompat="@tools:sample/avatars"
+		/>
+	
 	<TextView
-		android:id="@+id/appOverview_name"
+		android:id="@+id/appOverview_list_name"
 		android:layout_height="wrap_content"
 		android:layout_marginEnd="8dp"
+		android:layout_marginStart="8dp"
 		android:layout_width="0dp"
 		android:textAppearance="?attr/textAppearanceListItem"
 		app:layout_constraintBottom_toBottomOf="parent"
-		app:layout_constraintEnd_toStartOf="@id/appOverview_version"
+		app:layout_constraintEnd_toStartOf="@+id/appOverview_list_version_container"
 		app:layout_constraintHorizontal_weight="3"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/appOverview_list_icon"
 		app:layout_constraintTop_toTopOf="parent"
 		tools:text="@string/name"
 		/>
 	
-	<TextView
-		android:id="@+id/appOverview_version"
+	<androidx.constraintlayout.widget.ConstraintLayout
+		android:id="@+id/appOverview_list_version_container"
 		android:layout_height="wrap_content"
+		android:layout_marginBottom="8dp"
+		android:layout_marginEnd="8dp"
+		android:layout_marginTop="8dp"
 		android:layout_width="wrap_content"
-		android:textAppearance="?attr/textAppearanceListItem"
 		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintHorizontal_weight="2"
-		app:layout_constraintStart_toEndOf="@+id/appOverview_name"
 		app:layout_constraintTop_toTopOf="parent"
-		tools:text="v1.0.0"
-		/>
+		>
+		
+		<TextView
+			android:id="@+id/appOverview_list_version_installed"
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:textAppearance="?attr/textAppearanceListItem"
+			app:layout_constraintBottom_toTopOf="@+id/appOverview_list_version_update"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			tools:text="1.0.0"
+			/>
+		
+		<TextView
+			android:id="@+id/appOverview_list_version_update"
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:textAppearance="?attr/textAppearanceListItem"
+			android:visibility="gone"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			tools:text="1.1.5"
+			/>
+	</androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

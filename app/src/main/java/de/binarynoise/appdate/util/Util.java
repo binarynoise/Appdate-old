@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -36,7 +37,7 @@ import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.O;
 import static de.binarynoise.appdate.SFC.sfcm;
 
-@SuppressWarnings({"StaticMethodOnlyUsedInOneClass", "ClassNamePrefixedWithPackageName", "WeakerAccess"})
+@SuppressWarnings({"StaticMethodOnlyUsedInOneClass", "ClassNamePrefixedWithPackageName", "WeakerAccess", "unused"})
 public final class Util {
 	public static final  Gson          gson;
 	public static final  Gson          prettyGson;
@@ -89,7 +90,7 @@ public final class Util {
 	}
 	
 	public static void log(String tag, CharSequence text, int level) {
-		Log.println(level, tag, String.valueOf(text));
+		Log.println(level, "Appdate:" + tag, String.valueOf(text));
 	}
 	
 	public static void logPretty(String tag, Object o, int level) {
@@ -158,6 +159,12 @@ public final class Util {
 	
 	public static String toAbsolutePath(URL base, String rel) throws MalformedURLException {
 		return !rel.isEmpty() && rel.charAt(0) == '/' ? new URL(base, rel).toString() : rel;
+	}
+	
+	public static void throwAsRemote(Throwable t) throws RemoteException {
+		RemoteException remoteException = new RemoteException("RemoteException: " + t.getMessage());
+		remoteException.addSuppressed(t);
+		throw remoteException;
 	}
 	
 	static class UriDeserializer implements JsonDeserializer<Uri> {

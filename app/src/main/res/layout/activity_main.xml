@@ -33,6 +33,7 @@
 			android:layout_height="wrap_content"
 			android:layout_width="match_parent"
 			app:tabGravity="fill"
+			app:tabMode="auto"
 			>
 			
 			<com.google.android.material.tabs.TabItem

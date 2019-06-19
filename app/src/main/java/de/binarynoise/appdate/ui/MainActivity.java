@@ -1,7 +1,7 @@
 package de.binarynoise.appdate.ui;
 
 import android.os.Bundle;
-import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -9,29 +9,19 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import java.io.IOException;
-
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import de.binarynoise.appdate.R;
-import de.binarynoise.appdate.app.App;
 import de.binarynoise.appdate.app.AppList;
-import de.binarynoise.appdate.app.AppTemplate;
-import de.binarynoise.appdate.util.Util;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
 /**
  * The Main activity.
  */
-public class MainActivity extends AppCompatActivity implements AppOverviewFragment.OnListFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity {
 	private static final String TAG = "MainActivity";
 	ViewPager viewPager;
-	
-	@Override
-	public void onListFragmentInteraction(App app) {
-		AppDetailActivity.start(getBaseContext(), app);
-	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,15 +54,6 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 		viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
 		viewPager.setCurrentItem(1);
-		
-		new Thread(() -> {
-			try {
-				for (AppTemplate t : AppTemplate.getAvailableAppTemplates().values())
-					AppList.addToList(t);
-			} catch (IOException e) {
-				Util.log(TAG, "fetching templates failed", e, Log.WARN);
-			}
-		}).start();
 	}
 	
 	@Override
@@ -119,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements AppOverviewFragme
 			super(fm);
 		}
 		
+		@NonNull
 		@Override
 		public Fragment getItem(int position) {
 			switch (position) {

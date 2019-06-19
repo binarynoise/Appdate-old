@@ -62,6 +62,18 @@
 			android:name=".DownloadManagerService"
 			android:permission="android.permission.BIND_JOB_SERVICE"
 			/>
+		
+		<provider
+			android:name=".Installer$ApkFileProvider"
+			android:authorities="${applicationId}.fileprovider"
+			android:exported="false"
+			android:grantUriPermissions="true"
+			>
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/provider_paths"
+				/>
+		</provider>
 	</application>
 
 </manifest>

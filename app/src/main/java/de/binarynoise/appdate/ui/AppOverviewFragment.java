@@ -1,16 +1,19 @@
 package de.binarynoise.appdate.ui;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.app.App;
@@ -18,24 +21,20 @@ import de.binarynoise.appdate.app.AppList;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
-/**
- * A fragment representing a list of {@link App}s.
- * <p>
- * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
- * interface.
- */
 public class AppOverviewFragment extends Fragment {
-	@Nullable private OnListFragmentInteractionListener mListener;
-	private           RecyclerView                      recyclerView;
+	private static boolean            isRefreshing = false;
+	private        SwipeRefreshLayout swipeRefreshLayout;
+	private        RecyclerView       list;
 	
-	@Override
-	public void onAttach(Context context) {
-		super.onAttach(context);
-		if (context instanceof OnListFragmentInteractionListener)
-			mListener = (OnListFragmentInteractionListener) context;
-		else
-			throw new RuntimeException(context + " must implement OnListFragmentInteractionListener");
-		AppList.sortListAndUpdate();
+	public static void setRefreshing(boolean refreshing) {
+		isRefreshing = refreshing;
+		if (sfcm.sfc.appOverviewFragment != null)
+			runOnUiThread(() -> sfcm.sfc.appOverviewFragment.swipeRefreshLayout.setRefreshing(refreshing));
+	}
+	
+	public static void runOnUiThread(Runnable r) {
+		if (sfcm.sfc.mainActivity != null)
+			sfcm.sfc.mainActivity.runOnUiThread(r);
 	}
 	
 	@Override
@@ -44,19 +43,18 @@ public class AppOverviewFragment extends Fragment {
 		sfcm.sfc.appOverviewFragment = this;
 	}
 	
+	@NonNull
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+		@Nullable Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_app_overview, container, false);
 		
-		if (view instanceof RecyclerView) {
-			Context context = view.getContext();
-			recyclerView = (RecyclerView) view;
-			recyclerView.setLayoutManager(new LinearLayoutManager(context));
-			if (mListener != null)
-				recyclerView.setAdapter(new AppOverviewRecyclerView(mListener));
-			else
-				throw new NullPointerException("mListener must not be null");
-		}
+		swipeRefreshLayout = view.findViewById(R.id.appOverview_refreshLayout);
+		swipeRefreshLayout.setOnRefreshListener(() -> new Thread(AppList::checkForUpdates).start());
+		
+		list = view.findViewById(R.id.appOverview_list);
+		list.setAdapter(new AppOverviewListItemAdapter());
+		
 		return view;
 	}
 	
@@ -66,6 +64,18 @@ public class AppOverviewFragment extends Fragment {
 		requireContext();
 		requireActivity();
 		sfcm.sfc.appOverviewFragment = this;
+		updateListView();
+		setRefreshing(isRefreshing);
+		for (int i = 0; i < AppList.size() - 1; i++)
+			AppList.get(i).updateListItem();
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		for (int i = 0; i < AppList.size() - 1; i++)
+			AppList.get(i).updateListItem();
+		updateListView();
 	}
 	
 	@Override
@@ -75,92 +85,48 @@ public class AppOverviewFragment extends Fragment {
 			sfcm.sfc.appOverviewFragment = null;
 	}
 	
-	@Override
-	public void onDetach() {
-		super.onDetach();
-		mListener = null;
-	}
-	
 	public void updateListView() {
-		if (recyclerView != null && recyclerView.getAdapter() != null && sfcm.sfc.mainActivity != null)
-			sfcm.sfc.mainActivity.runOnUiThread(() -> recyclerView.getAdapter().notifyDataSetChanged());
+		if (list != null && list.getAdapter() != null) {
+			FragmentActivity activity = getActivity();
+			if (activity != null)
+				activity.runOnUiThread(() -> list.getAdapter().notifyDataSetChanged());
+		}
 	}
 	
-	/**
-	 * This interface must be implemented by activities that contain this
-	 * fragment to allow an interaction in this fragment to be communicated
-	 * to the activity and potentially other fragments contained in that
-	 * activity.
-	 */
-	@FunctionalInterface
-	public interface OnListFragmentInteractionListener {
-		void onListFragmentInteraction(App mItem);
-	}
-	
-	private static class AppOverviewListLayout extends RecyclerView.ViewHolder {
-		private final View     mView;
-		private final TextView mNameView;
-		private final TextView mVersionView;
-		private       App      mItem;
+	public static class AppOverviewListItem extends RecyclerView.ViewHolder {
+		public final View             view;
+		public final TextView         name;
+		public final TextView         versionInstalled;
+		public final TextView         versionUpdate;
+		public final ProgressBar      placeholder;
+		public final ImageView        icon;
+		public final ConstraintLayout container;
 		
-		AppOverviewListLayout(View view) {
+		AppOverviewListItem(View view) {
 			super(view);
-			mView = view;
-			mNameView = view.findViewById(R.id.appOverview_name);
-			mVersionView = view.findViewById(R.id.appOverview_version);
-		}
-		
-		View getmView() {
-			return mView;
-		}
-		
-		TextView getmNameView() {
-			return mNameView;
-		}
-		
-		TextView getmVersionView() {
-			return mVersionView;
-		}
-		
-		App getmItem() {
-			return mItem;
-		}
-		
-		void setmItem(App mItem) {
-			this.mItem = mItem;
+			this.view = view;
+			name = view.findViewById(R.id.appOverview_list_name);
+			versionInstalled = view.findViewById(R.id.appOverview_list_version_installed);
+			versionUpdate = view.findViewById(R.id.appOverview_list_version_update);
+			placeholder = view.findViewById(R.id.appOverview_list_icon_placeholder);
+			icon = view.findViewById(R.id.appOverview_list_icon);
+			container = view.findViewById(R.id.appOverview_list_container);
 		}
 	}
 	
-	/**
-	 * {@link RecyclerView.Adapter} that can display a {@link App} and makes a call to the
-	 * specified {@link OnListFragmentInteractionListener}.
-	 */
-	private static class AppOverviewRecyclerView extends RecyclerView.Adapter<AppOverviewListLayout> {
-		private final OnListFragmentInteractionListener mListener;
-		
-		AppOverviewRecyclerView(OnListFragmentInteractionListener mListener) {this.mListener = mListener;}
-		
+	static class AppOverviewListItemAdapter extends RecyclerView.Adapter<AppOverviewListItem> {
 		@NonNull
 		@Override
-		public AppOverviewListLayout onCreateViewHolder(ViewGroup parent, int viewType) {
+		public AppOverviewListItem onCreateViewHolder(ViewGroup parent, int viewType) {
 			View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_app_overview_list_item, parent, false);
-			return new AppOverviewListLayout(view);
+			return new AppOverviewListItem(view);
 		}
 		
 		@SuppressWarnings("ParameterNameDiffersFromOverriddenParameter")
 		@Override
-		public void onBindViewHolder(AppOverviewListLayout appOverviewListLayout, int position) {
+		public void onBindViewHolder(@NonNull AppOverviewListItem listItem, int position) {
 			App app = AppList.get(position);
-			appOverviewListLayout.setmItem(app);
-			appOverviewListLayout.getmNameView().setText(app.installedName);
-			appOverviewListLayout.getmVersionView().setText(app.getInstalledVersionString());
-			
-			appOverviewListLayout.getmView().setOnClickListener(v -> {
-				// Notify the active callbacks interface (the activity, if the
-				// fragment is attached to one) that an item has been selected.
-				if (mListener != null)
-					mListener.onListFragmentInteraction(appOverviewListLayout.getmItem());
-			});
+			app.registerListItem(listItem);
 		}
 		
 		@Override

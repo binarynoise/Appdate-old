@@ -12,12 +12,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import de.binarynoise.appdate.app.AppList;
+import de.binarynoise.appdate.app.AppTemplate;
 import de.binarynoise.appdate.ui.AddAppFragment;
 import de.binarynoise.appdate.ui.AppOverviewFragment;
 import de.binarynoise.appdate.ui.MainActivity;
@@ -26,12 +28,11 @@ import de.binarynoise.appdate.util.Util;
 
 import static de.binarynoise.appdate.ui.AddAppFragment.appFilterPattern;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
-
 public class SFC {
 	public static final SFC                   sfcm = new SFC();
 	public final        StaticFieldsContainer sfc  = new StaticFieldsContainer();
 	
+	@SuppressWarnings("MethodMayBeStatic")
 	public static class StaticFieldsContainer {
 		private static final int                  JOB_ID         = 123456789;
 		private static final String               TAG            = "SFC";
@@ -49,18 +50,15 @@ public class SFC {
 				AppList.load();
 				
 				new Thread(() -> {
-					JobInfo jobInfo =
-						new JobInfo.Builder(JOB_ID, new ComponentName(sfcm.sfc.getContext(), UpdateSchedulerService.class))
-							.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-							.setPeriodic(TimeUnit.HOURS.toMillis(4))
-							.setBackoffCriteria(JobInfo.MAX_BACKOFF_DELAY_MILLIS, JobInfo.BACKOFF_POLICY_EXPONENTIAL)
-							.setPersisted(false)
-							.build();
-					JobScheduler jobScheduler = (JobScheduler) (context.getSystemService(Context.JOB_SCHEDULER_SERVICE));
-					if (jobScheduler != null)
-						jobScheduler.schedule(jobInfo);
-					
 					checkPermissions();
+					
+					// 1.5 secs delay to speed up the start of the launched activity
+					try {
+						Thread.sleep(1500);
+					} catch (InterruptedException ignored) {}
+					scheduleBackgroundUpdate();
+					
+					loadTemplates();
 					
 					preloadInstalledAppLabels();
 				}).start();
@@ -78,6 +76,27 @@ public class SFC {
 		
 		public void setContext(Context context) {
 			this.context = context;
+		}
+		
+		private void scheduleBackgroundUpdate() {
+			JobInfo jobInfo = new JobInfo.Builder(JOB_ID, new ComponentName(getContext(), UpdateSchedulerService.class))
+				.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+				.setPeriodic(TimeUnit.HOURS.toMillis(4))
+				.setBackoffCriteria(JobInfo.MAX_BACKOFF_DELAY_MILLIS, JobInfo.BACKOFF_POLICY_EXPONENTIAL)
+				.setPersisted(false)
+				.build();
+			JobScheduler jobScheduler = (JobScheduler) (context.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+			if (jobScheduler != null)
+				jobScheduler.schedule(jobInfo);
+		}
+		
+		private void loadTemplates() {
+			try {
+				for (AppTemplate t : AppTemplate.getAvailableAppTemplates().values())
+					AppList.addToList(t);
+			} catch (IOException e) {
+				Util.log(TAG, "fetching templates failed", e, Log.WARN);
+			}
 		}
 		
 		private void checkPermissions() {

@@ -89,7 +89,9 @@ public class Version implements Comparable<Version> {
 	
 	private String getVersionCode() {
 		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < version.length - 1; i++) {
+		if (version.length == 0)
+			return "";
+		for (int i = 0; i < version.length - 2; i++) {
 			builder.append(version[i]);
 			builder.append(".");
 		}

@@ -1,8 +1,6 @@
 package de.binarynoise.appdate.util;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation indicating that network operations are performed within a new thread
@@ -10,4 +8,5 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Retention(RetentionPolicy.SOURCE)
 public @interface RunningInBackground {}

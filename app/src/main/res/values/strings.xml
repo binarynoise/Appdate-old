@@ -25,7 +25,7 @@
 	<string name="addApp_appInstalled_checkbox">App already installed?</string>
 	<string name="addApp_add">add app</string>
 	
-	<string name="appDetail_description">Here you can see and edit the details of the selected app</string>
+	<string name="appDetail_description">Here you can see the details of the selected app</string>
 	<string name="appDetail_apply">Apply</string>
 	<string name="appDetail_back">Back</string>
 	<string name="appDetail_alertDelete_header">Delete app</string>
@@ -34,5 +34,7 @@
 	<string name="appDetail_downloadSuccess">Download of app %s succeeded!</string>
 	<string name="appDetail_updateAvailable">Update available</string>
 	<string name="appDetail_updateUpToDate">App is already up-to-date</string>
+	<string name="version_installed">installed version</string>
+	<string name="version_available">available version</string>
 
 </resources>

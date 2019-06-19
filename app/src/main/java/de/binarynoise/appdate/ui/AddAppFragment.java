@@ -35,9 +35,6 @@ import static de.binarynoise.appdate.SFC.sfcm;
 import static de.binarynoise.appdate.util.Util.toast;
 import static de.binarynoise.appdate.util.Util.toastAndLog;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class AddAppFragment extends Fragment {
 	public static final  Pattern                   appFilterPattern =
 		Pattern.compile("^((com\\.|org\\.)?(google|android|cyanogenmod|lineage)).*$");

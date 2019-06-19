@@ -25,7 +25,7 @@
 	<string name="addApp_appInstalled_checkbox">App bereits installiert?</string>
 	<string name="addApp_add">App hinzufügen</string>
 	
-	<string name="appDetail_description">Hier kannst Du die Details der App sehen (und ändern)</string>
+	<string name="appDetail_description">Hier kannst Du die Details der App sehen</string>
 	<string name="appDetail_apply">Übernehmen</string>
 	<string name="appDetail_back">Zurück</string>
 	<string name="appDetail_alertDelete_header">App löschen</string>

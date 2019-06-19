@@ -23,8 +23,7 @@
     public static ** valueOf(java.lang.String);
 }
 
--keep public class com.google.android.gms.* { public *; }
--dontwarn com.google.android.gms.**
+-keep public class com.google.android.gms.** { public *; }
 
 -keep class * extends java.util.ListResourceBundle {
     protected Object[][] getContents();
@@ -47,5 +46,3 @@
     <fields>;
     <init>();
 }
-
-
