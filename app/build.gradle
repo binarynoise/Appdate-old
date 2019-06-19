@@ -53,7 +53,7 @@ dependencies {
 		exclude group: 'org.apache.httpcomponents' 
 		exclude group: 'com.google.guava', module: 'listenablefuture'
 	}
-	implementation('com.google.api-client:google-api-client-android:1.29.0') {
+	implementation('com.google.api-client:google-api-client-android:1.30.0') {
 		exclude group: 'org.apache.httpcomponents' 
 		exclude group: 'com.google.guava', module: 'listenablefuture'
 	}
