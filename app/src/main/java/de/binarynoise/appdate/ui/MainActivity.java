@@ -1,7 +1,17 @@
 package de.binarynoise.appdate.ui;
 
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -9,19 +19,63 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import de.binarynoise.appdate.R;
+import de.binarynoise.appdate.UpdateSchedulerService;
 import de.binarynoise.appdate.app.AppList;
+import de.binarynoise.appdate.util.Util;
 
 import static de.binarynoise.appdate.SFC.sfcm;
+import static de.binarynoise.appdate.ui.AddAppFragment.appFilterPattern;
 
 /**
  * The Main activity.
  */
 public class MainActivity extends AppCompatActivity {
-	private static final String TAG = "MainActivity";
+	private static final int    JOB_ID = 123456789;
+	private static final String TAG    = "MainActivity";
 	ViewPager viewPager;
+	
+	private static void scheduleBackgroundUpdate() {
+		Context context = sfcm.sfc.getContext();
+		JobInfo jobInfo = new JobInfo.Builder(JOB_ID, new ComponentName(context, UpdateSchedulerService.class))
+			.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+			.setPeriodic(TimeUnit.HOURS.toMillis(4))
+			.setBackoffCriteria(JobInfo.MAX_BACKOFF_DELAY_MILLIS, JobInfo.BACKOFF_POLICY_EXPONENTIAL)
+			.setPersisted(false)
+			.build();
+		JobScheduler jobScheduler = (JobScheduler) (context.getSystemService(Context.JOB_SCHEDULER_SERVICE));
+		if (jobScheduler != null)
+			jobScheduler.schedule(jobInfo);
+	}
+	
+	private static void checkPermissions() {
+		Context context = sfcm.sfc.getContext();
+		PackageManager packageManager = context.getPackageManager();
+		List<PackageInfo> installedPackages = packageManager.getInstalledPackages(0);
+		List<PackageInfo> userPackages = new ArrayList<>();
+		
+		for (PackageInfo installedPackage : installedPackages)
+			if (!appFilterPattern.matcher(installedPackage.packageName).matches())
+				userPackages.add(installedPackage);
+		
+		if (userPackages.size() <= 1) {
+			Util.toastAndLog(context, TAG, "Please grant permission to read installed packages", Toast.LENGTH_LONG, Log.WARN);
+			
+			// most likely the permission isn't "granted" by XPrivacyLua, so we'll try to open it
+			// that the user can revoke the restriction
+			Intent intent = new Intent(Intent.ACTION_MAIN);
+			intent.setComponent(ComponentName.unflattenFromString("eu.faircode.xlua/.ActivityMain"));
+			intent.addCategory(Intent.CATEGORY_LAUNCHER);
+			intent.putExtra("package", context.getPackageName());
+			context.startActivity(intent);
+		}
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +108,13 @@ public class MainActivity extends AppCompatActivity {
 		viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
 		viewPager.setCurrentItem(1);
+	}
+	
+	@Override
+	protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		checkPermissions();
+		scheduleBackgroundUpdate();
 	}
 	
 	@Override
@@ -97,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
 		 * @param fm the fm
 		 */
 		SectionsPagerAdapter(FragmentManager fm) {
-			super(fm);
+			super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
 		}
 		
 		@NonNull

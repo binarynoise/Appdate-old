@@ -1,5 +1,6 @@
 package de.binarynoise.appdate.app;
 
+import android.app.Activity;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
@@ -11,7 +12,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -30,9 +30,8 @@ import de.binarynoise.appdate.Installer;
 import de.binarynoise.appdate.R;
 import de.binarynoise.appdate.callbacks.ErrorCallback;
 import de.binarynoise.appdate.callbacks.SuccessCallback;
-import de.binarynoise.appdate.root.RootInstaller;
 import de.binarynoise.appdate.ui.AppDetailActivity;
-import de.binarynoise.appdate.ui.AppOverviewFragment;
+import de.binarynoise.appdate.ui.AppOverviewFragment.AppOverviewListItem;
 import de.binarynoise.appdate.util.*;
 import net.erdfelt.android.apk.AndroidApk;
 
@@ -43,33 +42,33 @@ import static de.binarynoise.appdate.SFC.sfcm;
 import static de.binarynoise.appdate.util.Util.*;
 
 public class App {
-	public static final         String                                  TAG                      = "App";
-	public final                int                                     id                       = generateID();
-	@NonNull final              URL                                     updateUrl;
-	private final transient     ReentrantLock                           lock                     = new ReentrantLock(true);
-	public                      String                                  downloadURLString;
-	public                      String                                  installedName;
-	public                      Version                                 updateVersion;
-	@PackagePrivate             boolean                                 hasUpdates;
-	@Nullable                   Version                                 installedVersion;
-	@Nullable                   String                                  installedPackageName;
-	private                     long                                    lastUpdated;
-	private                     String                                  cachePath;
-	private                     long                                    cacheFileSize            = -1;
-	private transient           boolean                                 deleteProgressbarVisible = true;
-	@Nullable private transient AppDetailActivity                       myActivity;
-	@Nullable private transient AppOverviewFragment.AppOverviewListItem myListItem;
-	private transient           long                                    progressBarCurrent       = -1;
-	private transient           long                                    progressBarMax           = -1;
-	private transient           boolean                                 buttonRowEnabled         = true;
-	private transient           long                                    lastCheckedForUpdates    = -1;
+	private static final        String                 TAG                      = "App";
+	public final                int                    id                       = generateID();
+	@NonNull final              URL                    updateUrl;
+	private final transient     ReentrantLock          lock                     = new ReentrantLock(true);
+	public                      String                 downloadURLString;
+	public                      String                 installedName;
+	public                      Version                updateVersion;
+	@PackagePrivate             boolean                hasUpdates;
+	@Nullable                   Version                installedVersion;
+	@Nullable                   String                 installedPackageName;
+	private                     long                   lastUpdated;
+	private                     String                 cachePath;
+	private                     long                   cacheFileSize            = -1;
+	private transient           boolean                deleteProgressbarVisible = true;
+	@Nullable private transient AppDetailActivity      myActivity;
+	@Nullable private transient AppOverviewListItem    myListItem;
+	private transient           long                   progressBarCurrent       = -1;
+	private transient           long                   progressBarMax           = -1;
+	private transient           boolean                buttonRowEnabled         = true;
+	private transient           long                   lastCheckedForUpdates    = -1;
 	@SuppressWarnings("RedundantFieldInitialization") //
-	private transient           Tupel<Version, String>                  lastVersion              = null;
-	private transient           boolean                                 updateProgressBarVisible;
-	private transient           boolean                                 downloadProgressBarVisible;
-	private transient           boolean                                 installProgressBarVisible;
+	private transient           Tupel<Version, String> lastVersion              = null;
+	private transient           boolean                updateProgressBarVisible;
+	private transient           boolean                downloadProgressBarVisible;
+	private transient           boolean                installProgressBarVisible;
 	@SuppressWarnings("RedundantFieldInitialization") //
-	private transient           boolean                                 progressBarVisible       = false;
+	private transient           boolean                progressBarVisible       = false;
 	
 	@RunInBackground
 	public App(String installedName, @NonNull URL updateUrl) throws IOException {
@@ -105,11 +104,8 @@ public class App {
 		Tupel<Version, String> t = getLatestVersionCode();
 		downloadURLString = t._2;
 		updateVersion = t._1;
-		PackageManager pm = sfcm.sfc.getContext().getPackageManager();
-		try {
-			PackageInfo packageInfo = pm.getPackageInfo(installedPackageName, 0);
-			lastUpdated = packageInfo.lastUpdateTime;
-		} catch (PackageManager.NameNotFoundException ignored) {}
+		isInstalled();
+		checkForUpdates();
 	}
 	
 	/**
@@ -157,10 +153,8 @@ public class App {
 			onInstallSuccess();
 		else if (state > STATUS_SUCCESS) {
 			String message = bundle.getString(EXTRA_STATUS_MESSAGE);
-			if (message != null && !message.isEmpty())
-				onInstallError(new InstallNotPermittedException(message));
-			else
-				onInstallError(new InstallNotPermittedException(sfcm.sfc.getContext().getString(R.string.err_installFailed)));
+			onInstallError(new InstallNotPermittedException(
+				message != null && !message.isEmpty() ? message : sfcm.sfc.getContext().getString(R.string.err_installFailed)));
 		}
 	}
 	
@@ -170,8 +164,7 @@ public class App {
 	
 	public void onDownloadSuccess() {
 		toastAndLog(sfcm.sfc.getContext(), TAG,
-			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_downloadSuccess)), installedName),
-			Toast.LENGTH_SHORT, Log.DEBUG);
+			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_downloadSuccess)), installedName));
 		enableButtonRow(true);
 		updateUI();
 	}
@@ -217,7 +210,7 @@ public class App {
 		});
 	}
 	
-	public void registerListItem(AppOverviewFragment.AppOverviewListItem listItem) {
+	public void registerListItem(AppOverviewListItem listItem) {
 		myListItem = listItem;
 		updateListItem();
 	}
@@ -229,10 +222,16 @@ public class App {
 		runOnAppOverviewThread(() -> {
 			myListItem.view.setOnClickListener(v -> AppDetailActivity.start(v.getContext(), id));
 			myListItem.name.setText(installedName);
-			myListItem.versionInstalled.setText(getVersionString(installedVersion));
-			if (hasUpdates)
-				myListItem.versionUpdate.setText(getVersionString(updateVersion));
-			setVisibilityOf(myListItem.versionUpdate, hasUpdates);
+			
+			if (hasUpdates) {
+				myListItem.version.setText(getVersionString(updateVersion));
+				myListItem.version.setTextColor(0xFF00BF00);
+			} else {
+				myListItem.version.setText(getVersionString(installedVersion));
+				myListItem.version.setTextColor(Color.BLACK);
+			}
+			
+			myListItem.name.setTextColor(isInstalled() ? Color.BLACK : Color.RED);
 			
 			myListItem.icon.setImageDrawable(getIcon());
 			setVisibilityOf(myListItem.placeholder, false);
@@ -277,6 +276,7 @@ public class App {
 			updateDebugView();
 		});
 		new Thread(AppList::saveChanges).start();
+		clearNotification(id);
 	}
 	
 	boolean isInstalled() {
@@ -342,10 +342,9 @@ public class App {
 				v.setVisibility(visible ? VISIBLE : GONE);
 		});
 		runOnAppOverviewThread(() -> {
-			if (sfcm.sfc.appOverviewFragment != null && myListItem != null) {
+			if (sfcm.sfc.appOverviewFragment != null && myListItem != null)
 				if (myListItem.view != null && myListItem.view.findViewById(v.getId()) == v)
 					v.setVisibility(visible ? VISIBLE : GONE);
-			}
 		});
 	}
 	
@@ -364,10 +363,9 @@ public class App {
 			return;
 		}
 		
-		File apkfile = new File(cachePath);
 		AndroidApk apk;
 		try {
-			apk = new AndroidApk(apkfile);
+			apk = new AndroidApk(new File(cachePath));
 		} catch (IOException e) {
 			onInstallError(e);
 			return;
@@ -386,15 +384,9 @@ public class App {
 //		}
 		
 		try {
-			try {
-				RootInstaller.install(cachePath, sfcm.sfc.getContext());
-			} catch (RootInstaller.ShellOpenException e) {
-				Installer.install(apkfile, sfcm.sfc.getContext());
-			}
-		} catch (InstallNotPermittedException | IOException e) {
-			onDownloadError(e);
-		} catch (RemoteException e) {
-			onDownloadError(e.getSuppressed().length == 0 ? e : e.getSuppressed()[0]);
+			Installer.install(cachePath);
+		} catch (InstallNotPermittedException | IOException | Installer.InstallException e) {
+			onInstallError(e);
 		}
 	}
 	
@@ -504,8 +496,7 @@ public class App {
 	
 	private void onInstallSuccess() {
 		toastAndLog(sfcm.sfc.getContext(), TAG,
-			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_installSuccess)), installedName),
-			Toast.LENGTH_SHORT, Log.DEBUG);
+			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_installSuccess)), installedName));
 		enableButtonRow(true);
 		installedVersion = updateVersion;
 		lastUpdated = System.currentTimeMillis();
@@ -525,8 +516,7 @@ public class App {
 	
 	private void onInstallUpToDate() {
 		toastAndLog(sfcm.sfc.getContext(), TAG,
-			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_updateUpToDate)), installedName),
-			Toast.LENGTH_SHORT, Log.DEBUG);
+			String.format(String.valueOf(sfcm.sfc.getContext().getText(R.string.appDetail_updateUpToDate)), installedName));
 		enableButtonRow(true);
 		updateUI();
 	}
@@ -541,10 +531,9 @@ public class App {
 			try {
 				checkForUpdates();
 				if (hasUpdates)
-					toast(sfcm.sfc.getContext(), sfcm.sfc.getContext().getString(R.string.appDetail_updateAvailable),
-						Toast.LENGTH_SHORT);
+					toast(sfcm.sfc.getContext(), sfcm.sfc.getContext().getString(R.string.appDetail_updateAvailable));
 				else
-					toast(sfcm.sfc.getContext(), sfcm.sfc.getContext().getString(R.string.appDetail_updateUpToDate), Toast.LENGTH_SHORT);
+					toast(sfcm.sfc.getContext(), sfcm.sfc.getContext().getString(R.string.appDetail_updateUpToDate));
 			} catch (IOException e) {
 				toastAndLog(sfcm.sfc.getContext(), TAG, sfcm.sfc.getContext().getString(R.string.err_updateFailed), e,
 					Toast.LENGTH_SHORT, Log.WARN);
@@ -568,14 +557,13 @@ public class App {
 		enableButtonRow(false);
 		deleteProgressbarVisible = true;
 		updateUI();
-		if (myActivity != null) {
+		if (myActivity != null)
 			new AlertDialog.Builder(myActivity, R.style.AppTheme_Dialog)
 				.setTitle(sfcm.sfc.getContext().getString(R.string.appDetail_alertDelete_header))
 				.setMessage(sfcm.sfc.getContext().getString(R.string.appDetail_alertDelete_content))
 				.setPositiveButton(android.R.string.yes, (dialog, which) -> {
 					delete();
-					doSynchronized(() -> unRegisterAppDetailActivity(myActivity));
-					updateUI();
+					runOnAppDetailThread(Activity::finish);
 				})
 				.setNegativeButton(android.R.string.no, (dialog, which) -> {
 					enableButtonRow(true);
@@ -587,7 +575,6 @@ public class App {
 				})
 				.setIcon(android.R.drawable.ic_dialog_alert)
 				.show();
-		}
 	}
 	
 	@RunningInBackground
@@ -597,7 +584,6 @@ public class App {
 		progressBarCurrent = 0L;
 		progressBarMax = 0L;
 		updateUI();
-		
 		new Thread(this::download).start();
 	}
 	
@@ -606,7 +592,6 @@ public class App {
 		installProgressBarVisible = true;
 		progressBarCurrent = 0;
 		progressBarMax = 0;
-		
 		updateUI();
 		new Thread(this::install).start();
 	}

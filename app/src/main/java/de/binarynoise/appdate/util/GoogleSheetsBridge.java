@@ -11,27 +11,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
+import de.binarynoise.auth.Tokens;
 
 import static de.binarynoise.appdate.SFC.sfcm;
 
-@SuppressWarnings("deprecation")
 public class GoogleSheetsBridge {
-	private static final String           applicationName = "Appdate";
-	private static final String           spreadsheetId   = "1cq4gZLevu0hPIcaP6Z4Hp46hrmH47R7Zd83XSNNKp3g";
-	private static final String           range           = "templates!A2:C1000";
-	private static final HttpTransport    httpTransport;
-	private static final JsonFactory      jsonFactory     = JacksonFactory.getDefaultInstance();
-	private static final Sheets           sheets;
-	private static final String           TAG             = "GoogleSheetsBridge";
-	private static       GoogleCredential credential;
+	private static final String                 applicationName = "Appdate";
+	private static final String                 spreadsheetId   = "1cq4gZLevu0hPIcaP6Z4Hp46hrmH47R7Zd83XSNNKp3g";
+	private static final String                 range           = "templates!A2:C1000";
+	private static final HttpTransport          httpTransport;
+	private static final Sheets                 sheets;
+	private static final HttpCredentialsAdapter credentials;
 	
 	static {
 		try {
@@ -41,9 +39,10 @@ public class GoogleSheetsBridge {
 				keyStore.load(keyStream, null);
 			}
 			httpTransport = new NetHttpTransport.Builder().trustCertificates(keyStore).build();
-			
-			authExplicit();
-			sheets = getSheets();
+			credentials = authExplicit();
+			sheets = new Sheets.Builder(httpTransport, JacksonFactory.getDefaultInstance(), credentials)
+				.setApplicationName(applicationName)
+				.build();
 		} catch (GeneralSecurityException | IOException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
@@ -62,16 +61,12 @@ public class GoogleSheetsBridge {
 		updateValueRange(valueRange);
 	}
 	
-	private static void authExplicit() throws IOException {
+	private static HttpCredentialsAdapter authExplicit() throws IOException {
 		List<String> scopes = new ArrayList<>();
 		scopes.add("https://www.googleapis.com/auth/cloud-platform");
 		scopes.addAll(SheetsScopes.all());
-		credential = GoogleCredential.fromStream(new ByteArrayInputStream("".getBytes()), httpTransport, jsonFactory).createScoped(scopes);
-	}
-	
-	@RunInBackground
-	private static Sheets getSheets() {
-		return new Sheets.Builder(httpTransport, jsonFactory, credential).setApplicationName(applicationName).build();
+		return new HttpCredentialsAdapter(
+			GoogleCredentials.fromStream(new ByteArrayInputStream(Tokens.getGoogleCred().getBytes())).createScoped(scopes));
 	}
 	
 	@RunInBackground

@@ -13,7 +13,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -71,9 +70,17 @@ public final class Util {
 		return toProgress(curr, max, steps) != toProgress(last, max, steps);
 	}
 	
+	public static void toastAndLog(Context context, String tag, CharSequence text, Throwable t) {
+		toastAndLog(context, tag, text, t, Log.DEBUG, Toast.LENGTH_SHORT);
+	}
+	
 	public static void toastAndLog(Context context, String tag, CharSequence text, Throwable t, int duration, int level) {
-		toast(context, text + ":\n" + t.getMessage(), duration);
+		toast(context, text + ":\n" + t.getLocalizedMessage(), duration);
 		log(tag, text, t, level);
+	}
+	
+	public static void toastAndLog(Context context, String tag, CharSequence text) {
+		toastAndLog(context, tag, text, Log.DEBUG, Toast.LENGTH_SHORT);
 	}
 	
 	public static void toastAndLog(Context context, String tag, CharSequence text, int duration, int level) {
@@ -81,16 +88,32 @@ public final class Util {
 		log(tag, text, level);
 	}
 	
+	public static void toast(Context context, CharSequence text) {
+		toast(context, text, Toast.LENGTH_SHORT);
+	}
+	
 	public static void toast(Context context, CharSequence text, int duration) {
 		new Handler(handlerThread.getLooper()).post(() -> Toast.makeText(context, text, duration).show());
+	}
+	
+	public static void log(String tag, CharSequence text, Throwable t) {
+		log(tag, text, t, Log.DEBUG);
 	}
 	
 	public static void log(String tag, CharSequence text, Throwable t, int level) {
 		log(tag, text + "\n" + Log.getStackTraceString(t), level);
 	}
 	
+	public static void log(String tag, CharSequence text) {
+		log(tag, text, Log.DEBUG);
+	}
+	
 	public static void log(String tag, CharSequence text, int level) {
 		Log.println(level, "Appdate:" + tag, String.valueOf(text));
+	}
+	
+	public static void logPretty(String tag, Object o) {
+		logPretty(tag, o, Log.DEBUG);
 	}
 	
 	public static void logPretty(String tag, Object o, int level) {
@@ -118,6 +141,13 @@ public final class Util {
 		}
 	}
 	
+	public static void clearNotification(int id) {
+		Context context = sfcm.sfc.getContext();
+		NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+		if (notificationManager != null)
+			notificationManager.cancel(id);
+	}
+	
 	public static Bitmap drawableToBitmap(Drawable drawable) {
 		if (drawable instanceof BitmapDrawable) {
 			BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
@@ -138,10 +168,8 @@ public final class Util {
 	}
 	
 	public static void dumpBundle(String tag, Bundle extras) {
-		
-		for (String s : extras.keySet()) {
+		for (String s : extras.keySet())
 			Log.d(tag, String.format("'%s': '%s'", s, String.valueOf(extras.get(s)).replaceAll("[\\r\\n]", "")));
-		}
 	}
 	
 	@SuppressWarnings("SameParameterValue")
@@ -159,12 +187,6 @@ public final class Util {
 	
 	public static String toAbsolutePath(URL base, String rel) throws MalformedURLException {
 		return !rel.isEmpty() && rel.charAt(0) == '/' ? new URL(base, rel).toString() : rel;
-	}
-	
-	public static void throwAsRemote(Throwable t) throws RemoteException {
-		RemoteException remoteException = new RemoteException("RemoteException: " + t.getMessage());
-		remoteException.addSuppressed(t);
-		throw remoteException;
 	}
 	
 	static class UriDeserializer implements JsonDeserializer<Uri> {

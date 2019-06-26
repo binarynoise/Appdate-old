@@ -22,19 +22,15 @@ import de.binarynoise.appdate.app.AppList;
 import static de.binarynoise.appdate.SFC.sfcm;
 
 public class AppOverviewFragment extends Fragment {
+	@SuppressWarnings("RedundantFieldInitialization") //
 	private static boolean            isRefreshing = false;
 	private        SwipeRefreshLayout swipeRefreshLayout;
 	private        RecyclerView       list;
 	
 	public static void setRefreshing(boolean refreshing) {
 		isRefreshing = refreshing;
-		if (sfcm.sfc.appOverviewFragment != null)
-			runOnUiThread(() -> sfcm.sfc.appOverviewFragment.swipeRefreshLayout.setRefreshing(refreshing));
-	}
-	
-	public static void runOnUiThread(Runnable r) {
-		if (sfcm.sfc.mainActivity != null)
-			sfcm.sfc.mainActivity.runOnUiThread(r);
+		if (sfcm.sfc.appOverviewFragment != null && sfcm.sfc.mainActivity != null)
+			sfcm.sfc.mainActivity.runOnUiThread(() -> sfcm.sfc.appOverviewFragment.swipeRefreshLayout.setRefreshing(refreshing));
 	}
 	
 	@Override
@@ -96,8 +92,7 @@ public class AppOverviewFragment extends Fragment {
 	public static class AppOverviewListItem extends RecyclerView.ViewHolder {
 		public final View             view;
 		public final TextView         name;
-		public final TextView         versionInstalled;
-		public final TextView         versionUpdate;
+		public final TextView         version;
 		public final ProgressBar      placeholder;
 		public final ImageView        icon;
 		public final ConstraintLayout container;
@@ -106,8 +101,7 @@ public class AppOverviewFragment extends Fragment {
 			super(view);
 			this.view = view;
 			name = view.findViewById(R.id.appOverview_list_name);
-			versionInstalled = view.findViewById(R.id.appOverview_list_version_installed);
-			versionUpdate = view.findViewById(R.id.appOverview_list_version_update);
+			version = view.findViewById(R.id.appOverview_list_version);
 			placeholder = view.findViewById(R.id.appOverview_list_icon_placeholder);
 			icon = view.findViewById(R.id.appOverview_list_icon);
 			container = view.findViewById(R.id.appOverview_list_container);

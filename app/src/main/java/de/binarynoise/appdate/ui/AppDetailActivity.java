@@ -24,7 +24,7 @@ import static de.binarynoise.appdate.util.Util.dumpBundle;
 /**
  * The App detail activity.
  */
-@SuppressWarnings({"FieldCanBeLocal", "WeakerAccess"})
+@SuppressWarnings("WeakerAccess")
 public class AppDetailActivity extends AppCompatActivity {
 	public static final String            EXTRA_APP     = "EXTRA_APP";
 	public static final String            TAG           = "AppDetailActivity";

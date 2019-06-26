@@ -333,7 +333,6 @@
 				>
 				
 				<com.google.android.material.textfield.TextInputLayout
-					android:id="@+id/appDetail_installedVersion_float"
 					android:layout_height="wrap_content"
 					android:layout_weight="1"
 					android:layout_width="match_parent"

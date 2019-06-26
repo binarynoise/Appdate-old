@@ -8,22 +8,15 @@
 -printmapping build/mapping.txt
 -android
 -dontpreverify
-#-repackageclasses 'obf'
 -allowaccessmodification
 -optimizations !code/simplification/arithmetic
--keepattributes SourceFile,LineNumberTable
-#-keepattributes *Annotation*
-
--keepclasseswithmembernames,includedescriptorclasses class * {
-    native <methods>;
-}
+-keepattributes SourceFile,LineNumberTable,Exception,*Annotation*
+-dontobfuscate
 
 -keepclassmembers,allowoptimization enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
-
--keep public class com.google.android.gms.** { public *; }
 
 -keep class * extends java.util.ListResourceBundle {
     protected Object[][] getContents();
@@ -33,16 +26,6 @@
     public static final *** NULL;
 }
 
--keepnames @com.google.android.gms.common.annotation.KeepName class *
--keepclassmembernames class * {
-    @com.google.android.gms.common.annotation.KeepName *;
-}
-
--keepnames class * implements android.os.Parcelable {
-    public static final ** CREATOR;
-}
-
--keepclassmembers class de.binarynoise.app.App {
-    <fields>;
-    <init>();
+-keepclassmembers class * {
+    @com.google.api.client.util.Key *;
 }

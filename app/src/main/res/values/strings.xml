@@ -26,8 +26,6 @@
 	<string name="addApp_add">add app</string>
 	
 	<string name="appDetail_description">Here you can see the details of the selected app</string>
-	<string name="appDetail_apply">Apply</string>
-	<string name="appDetail_back">Back</string>
 	<string name="appDetail_alertDelete_header">Delete app</string>
 	<string name="appDetail_alertDelete_content">Are you sure to delete this app?</string>
 	<string name="appDetail_installSuccess">Installation of app %s succeeded!</string>

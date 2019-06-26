@@ -27,9 +27,9 @@ public class AppList {
 	private static final    String        TAG                     = "AppList";
 	private static final    App[]         EMPTY_APP_ARRAY         = new App[0];
 	private static final    List<App>     appList                 = Collections.synchronizedList(new ArrayList<>());
+	private static final    ReentrantLock lock                    = new ReentrantLock(true);
 	@SuppressWarnings("RedundantFieldInitialization") //
 	private static volatile boolean       changed                 = false;
-	private static final    ReentrantLock lock                    = new ReentrantLock(true);
 	
 	@SuppressWarnings("UnstableApiUsage")
 	public static void load() {
@@ -77,20 +77,6 @@ public class AppList {
 		sortListAndUpdate(true);
 	}
 	
-	@RunInBackground
-	public static void addToList(AppTemplate appTemplate) throws IOException {
-		App app = new App(appTemplate);
-		lock.lock();
-		try {
-			appList.add(app);
-		} finally {
-			lock.unlock();
-		}
-		changed = true;
-		sortListAndUpdate(false);
-	}
-	
-	@SuppressWarnings("ObjectAllocationInLoop")
 	@Nullable
 	public static App findByPackageName(@Nullable String packageName) {
 		if (packageName == null)
@@ -111,14 +97,26 @@ public class AppList {
 		return null;
 	}
 	
+	@RunInBackground
 	public static void checkForUpdates() {
 		AppOverviewFragment.setRefreshing(true);
 		lock.lock();
 		try {
+			boolean failed = false;
+			try {
+				for (AppTemplate t : AppTemplate.getAvailableAppTemplates().values())
+					addToList(t);
+			} catch (IOException e) {
+				log(TAG, "fetching templates failed", e, Log.WARN);
+				failed = true;
+			}
 			for (App app : appList) {
-				try {
-					app.checkForUpdates();
-				} catch (IOException ignored) {}
+				if (!failed)
+					try {
+						app.checkForUpdates();
+					} catch (IOException e) {
+						failed = true;
+					}
 				if (app.hasUpdates) {
 					NotificationActionWithExtras extras = new NotificationActionWithExtras();
 					extras.put(EXTRA_APP_ID, app.id);
@@ -133,7 +131,7 @@ public class AppList {
 							"Appdate has found an update for app %s.\nThe currently installed Version is %s\nThe available version is %s",
 							app.installedName, app.installedVersion, app.updateVersion);
 					else
-						text = String.format("Appdate can install app %s.\nThe available version is %s", app.installedName,
+						text = String.format("Appdate can installRoot app %s.\nThe available version is %s", app.installedName,
 							app.updateVersion);
 					
 					Drawable drawable = app.getIcon();
@@ -162,6 +160,19 @@ public class AppList {
 	
 	static App[] getAll() {
 		return appList.toArray(EMPTY_APP_ARRAY);
+	}
+	
+	@RunInBackground
+	private static void addToList(AppTemplate appTemplate) throws IOException {
+		App app = new App(appTemplate);
+		lock.lock();
+		try {
+			appList.add(app);
+		} finally {
+			lock.unlock();
+		}
+		changed = true;
+		sortListAndUpdate(false);
 	}
 	
 	private static void sortListAndUpdate(boolean upload) {

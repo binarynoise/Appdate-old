@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,57 +55,19 @@ public class AddAppFragment extends Fragment {
 	private              ConstraintLayout          packageDetailContainer;
 	private              ProgressBar               testButtonProgressBar;
 	
-	public static String getAppName(PackageManager pm, PackageInfo info) {
+	private static String getAppName(PackageManager pm, PackageInfo info) {
 		if (!packageNames.containsKey(info.packageName))
 			packageNames.put(info.packageName, info.applicationInfo.loadLabel(pm));
 		return String.valueOf(packageNames.get(info.packageName));
 	}
 	
-	@Override
-	public void setUserVisibleHint(boolean isVisibleToUser) {
-		super.setUserVisibleHint(isVisibleToUser);
-		
-		if (isVisibleToUser) {
-			//hide fab
-			if (sfcm.sfc.floatingActionButton != null) {
-				sfcm.sfc.floatingActionButton.animate().alpha(0.0F);
-				sfcm.sfc.floatingActionButton.setClickable(false);
-			}
-			
-			//show keyboard if text input fields are empty
-			if (urlView.getText().length() == 0) {
-				urlView.setFocusableInTouchMode(true);
-				urlView.requestFocus();
-				
-				if (getActivity() != null) {
-					getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-					InputMethodManager systemService =
-						(InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-					if (systemService != null)
-						systemService.showSoftInput(urlView, 0);
-				}
-			}
-		} else { // not visible to user
-			//show fab
-			if (sfcm.sfc.floatingActionButton != null) {
-				sfcm.sfc.floatingActionButton.animate().alpha(1.0F);
-				sfcm.sfc.floatingActionButton.setClickable(true);
-			}
-			
-			//show keyboard
-			FragmentActivity activity = getActivity();
-			if (activity != null) {
-				activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-				InputMethodManager systemService = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-				if (systemService != null)
-					systemService.hideSoftInputFromWindow(myView.getWindowToken(), 0);
-			}
-		}
+	private static void preloadInstalledAppLabels() {
+		PackageManager pm = sfcm.sfc.getContext().getPackageManager();
+		List<PackageInfo> installedPackages = pm.getInstalledPackages(0);
+		for (PackageInfo packageInfo : installedPackages)
+			getAppName(pm, packageInfo);
 	}
 	
-	/**
-	 * Inflate the layout for this fragment
-	 */
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		myView = inflater.inflate(R.layout.fragment_add_app, container, false);
@@ -156,6 +117,7 @@ public class AddAppFragment extends Fragment {
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 		sfcm.sfc.addAppFragment = this;
+		preloadInstalledAppLabels();
 	}
 	
 	@Override
@@ -164,6 +126,50 @@ public class AddAppFragment extends Fragment {
 		requireContext();
 		requireActivity();
 		sfcm.sfc.addAppFragment = this;
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		//hide fab
+		if (sfcm.sfc.floatingActionButton != null) {
+			sfcm.sfc.floatingActionButton.animate().alpha(0.0F);
+			sfcm.sfc.floatingActionButton.setClickable(false);
+		}
+		
+		//show keyboard if text input fields are empty
+		if (urlView.getText().length() == 0) {
+			urlView.setFocusableInTouchMode(true);
+			urlView.requestFocus();
+			
+			if (getActivity() != null) {
+				getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+				InputMethodManager systemService = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+				if (systemService != null)
+					systemService.showSoftInput(urlView, 0);
+			}
+		}
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		
+		//show fab
+		if (sfcm.sfc.floatingActionButton != null) {
+			sfcm.sfc.floatingActionButton.animate().alpha(1.0F);
+			sfcm.sfc.floatingActionButton.setClickable(true);
+		}
+		
+		//hide keyboard
+		FragmentActivity activity = getActivity();
+		if (activity != null) {
+			activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+			InputMethodManager systemService = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+			if (systemService != null)
+				systemService.hideSoftInputFromWindow(myView.getWindowToken(), 0);
+		}
 	}
 	
 	@Override
@@ -206,8 +212,7 @@ public class AddAppFragment extends Fragment {
 				url = new URL(urlString);
 			} catch (MalformedURLException e) {
 				toastAndLog(context, TAG,
-					context.getString(R.string.addApp_testFailed) + "\n" + context.getString(R.string.err_invalidURL),
-					Toast.LENGTH_SHORT, Log.DEBUG);
+					context.getString(R.string.addApp_testFailed) + "\n" + context.getString(R.string.err_invalidURL));
 				activity.runOnUiThread(() -> {
 					testButtonProgressBar.setVisibility(View.INVISIBLE);
 					testButton.setEnabled(true);
@@ -223,16 +228,14 @@ public class AddAppFragment extends Fragment {
 					tempApp = new App(name, url);
 				}
 			} catch (IOException e) {
-				toastAndLog(context, TAG, context.getString(R.string.addApp_testFailed) + "\n" + e.getMessage(), Toast.LENGTH_SHORT,
-					Log.DEBUG);
+				toastAndLog(context, TAG, context.getString(R.string.addApp_testFailed) + "\n" + e.getMessage());
 				activity.runOnUiThread(() -> {
 					testButtonProgressBar.setVisibility(View.INVISIBLE);
 					testButton.setEnabled(true);
 				});
 				return;
 			}
-			toast(context, String.format(context.getString(R.string.addApp_testSucceed), tempApp.updateVersion.toString()),
-				Toast.LENGTH_SHORT);
+			toast(context, String.format(context.getString(R.string.addApp_testSucceed), tempApp.updateVersion.toString()));
 			
 			activity.runOnUiThread(() -> {
 				addButton.setEnabled(true);
@@ -244,7 +247,7 @@ public class AddAppFragment extends Fragment {
 	
 	private void onAddButtonClick(@SuppressWarnings("unused") View view) {
 		if (tempApp == null || tempApp.installedName.isEmpty())
-			toast(view.getContext(), getString(R.string.err_emptyName), Toast.LENGTH_SHORT);
+			toast(view.getContext(), getString(R.string.err_emptyName));
 		else {
 			AppList.addToList(tempApp);
 			tempApp = null;
@@ -292,7 +295,7 @@ public class AddAppFragment extends Fragment {
 			}
 		
 		if (hints.size() == 1)
-			toast(sfcm.sfc.getContext(), "Please grant permission to read installed packages", Toast.LENGTH_LONG);
+			toast(sfcm.sfc.getContext(), "Please grant permission to read installed packages");
 		
 		SpinnerAdapter spinnerAdapter =
 			new SimpleAdapter(context, hints, R.layout.layout_add_app_package_name_spinner, new String[]{PACKAGE_NAME},

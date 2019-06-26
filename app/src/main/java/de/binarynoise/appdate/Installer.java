@@ -1,50 +1,49 @@
 package de.binarynoise.appdate;
 
-import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInstaller;
-import android.content.pm.PackageInstaller.SessionParams;
+import android.content.pm.PackageInstaller.*;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import androidx.core.content.FileProvider;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 import de.binarynoise.appdate.app.App;
 import de.binarynoise.appdate.app.AppList;
 import de.binarynoise.appdate.util.InstallNotPermittedException;
-import de.binarynoise.appdate.util.Util;
+import eu.chainfire.libsuperuser.Shell;
 import net.erdfelt.android.apk.AndroidApk;
 
 import static android.content.Intent.EXTRA_INTENT;
-import static android.content.pm.PackageInstaller.EXTRA_PACKAGE_NAME;
+import static android.content.pm.PackageInstaller.*;
 import static android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL;
 import static android.content.pm.PackageManager.INSTALL_REASON_USER;
+import static de.binarynoise.appdate.SFC.sfcm;
+import static de.binarynoise.appdate.util.Util.*;
 
 public class Installer extends BroadcastReceiver {
-	@SuppressWarnings("unused") private static final String TAG = "Installer";
+	private static final String TAG = "Installer";
 	
-	public static void install(File apkfile, Context context) throws InstallNotPermittedException, IOException {
-		installPackageInstaller(apkfile, context);
+	public static void install(String path) throws InstallException, IOException, InstallNotPermittedException {
+		try {
+			installRoot(sfcm.sfc.getContext(), path);
+		} catch (ShellOpenException e) {
+			log(TAG, "shell could not be opened", e, Log.WARN);
+			installNonRoot(new File(path));
+		}
 	}
 	
-	@SuppressWarnings("ConstantExpression")
-	private static void installPromt(File apkFile, Context context) {
-		Intent promptInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(
-			FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".fileprovider", apkFile),
-			"application/vnd.android.package-archive");
-		promptInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		context.startActivity(promptInstall);
-	}
-	
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	private static void installPackageInstaller(File apkfile, Context context) throws InstallNotPermittedException, IOException {
+	private static void installNonRoot(File apkfile) throws InstallNotPermittedException, IOException {
+		Context context = sfcm.sfc.getContext();
 		PackageManager packageManager = context.getPackageManager();
 		
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls())
@@ -62,7 +61,7 @@ public class Installer extends BroadcastReceiver {
 			params.setInstallReason(INSTALL_REASON_USER);
 		params.setSize(apkfile.length());
 		
-		try (PackageInstaller.Session session = packageInstaller.openSession(sessionId)) {
+		try (Session session = packageInstaller.openSession(sessionId)) {
 			try (BufferedInputStream bufIn = new BufferedInputStream(new FileInputStream(apkfile));
 				OutputStream out = session.openWrite(packageName + ".apk", 0, apkfile.length())) {
 				int count;
@@ -81,10 +80,62 @@ public class Installer extends BroadcastReceiver {
 		}
 	}
 	
+	private static void installRoot(Context context, String apkFile) throws ShellOpenException, InstallException, IOException {
+		String user = "";
+		File externalCacheDir = context.getExternalCacheDir();
+		if (externalCacheDir != null) {
+			String id = externalCacheDir.getCanonicalPath().split("/")[3]; // /storge/emulated/0
+			if (id.matches("\\d+")) {
+				int uid = Integer.parseInt(id);
+				user = uid >= 0 ? "--user " + uid : "";
+			}
+		}
+		
+		if (!Shell.SU.available())
+			throw new ShellOpenException();
+		
+		List<String> result = new ArrayList<>();
+		int exitCode;
+		try {
+			exitCode =
+				Shell.Pool.SU.run("pm install -r -i " + BuildConfig.APPLICATION_ID + " " + user + " " + apkFile, result, result,
+					false);
+		} catch (Shell.ShellDiedException e) {
+			ShellOpenException shellOpenException = new ShellOpenException();
+			shellOpenException.addSuppressed(e);
+			throw shellOpenException;
+		}
+		
+		if (exitCode == 0 && !result.isEmpty() && result.get(0).toLowerCase().startsWith("success")) {
+			Intent intent = new Intent();
+			intent.setClass(context, Installer.class);
+			
+			intent.putExtra(EXTRA_PACKAGE_NAME, new AndroidApk(new File(apkFile)).getPackageName());
+			intent.putExtra(EXTRA_STATUS, STATUS_SUCCESS);
+			
+			new Installer().onReceive(sfcm.sfc.getContext(), intent);
+			
+			return;
+		}
+		
+		log(TAG, String.format(Locale.US, "ExitCode: %d", exitCode));
+		logPretty(TAG, result);
+		
+		if (result.isEmpty())
+			throw new ShellOpenException();
+		
+		String res0 = result.get(0);
+		
+		if (res0.contains("usage"))
+			throw new ShellOpenException();
+		
+		throw InstallException.parse(res0);
+	}
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if (intent == null) {
-			Util.log(TAG, "intent was null", Log.WARN);
+			log(TAG, "intent was null", Log.WARN);
 			return;
 		}
 		
@@ -111,8 +162,31 @@ public class Installer extends BroadcastReceiver {
 		}
 		
 		if (error)
-			Util.dumpBundle(TAG, extras);
+			dumpBundle(TAG, extras);
 	}
 	
-	public static class ApkFileProvider extends FileProvider {}
+	/**
+	 * Exception thrown when the root installRoot failed
+	 */
+	public static class InstallException extends Exception {
+		InstallException(String message) {
+			super(message);
+		}
+		
+		@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
+		static InstallException parse(String log) {
+			if (log.startsWith("Failure"))
+				return new InstallException(log.substring(log.indexOf('[') + 1, log.length() - 2));
+			else if (log.startsWith("Error: "))
+				return new InstallException(log.substring(7));
+			else
+				return new InstallException(log);
+		}
+	}
+	
+	/**
+	 * Excepion that is thrown when the root shell could not be started properly
+	 * or root access was denied and we should fall back to non-root installRoot
+	 */
+	private static class ShellOpenException extends Exception {}
 }

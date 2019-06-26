@@ -26,8 +26,6 @@
 	<string name="addApp_add">App hinzufügen</string>
 	
 	<string name="appDetail_description">Hier kannst Du die Details der App sehen</string>
-	<string name="appDetail_apply">Übernehmen</string>
-	<string name="appDetail_back">Zurück</string>
 	<string name="appDetail_alertDelete_header">App löschen</string>
 	<string name="appDetail_alertDelete_content">Möchtest du die App wirklich löschen?</string>
 	<string name="appDetail_installSuccess">Installation der App %s erfolgreich!</string>

@@ -84,18 +84,14 @@ public class Version implements Comparable<Version> {
 	@NonNull
 	@Override
 	public String toString() {
-		return getVersionCode();
-	}
-	
-	private String getVersionCode() {
 		StringBuilder builder = new StringBuilder();
-		if (version.length == 0)
-			return "";
-		for (int i = 0; i < version.length - 2; i++) {
+		
+		for (int i = 0; i < version.length; i++) {
 			builder.append(version[i]);
-			builder.append(".");
+			if (i < version.length - 1)
+				builder.append(".");
 		}
-		builder.append(version[version.length - 1]);
+		
 		return builder.toString();
 	}
 }
