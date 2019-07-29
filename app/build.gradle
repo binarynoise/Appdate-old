@@ -69,6 +69,6 @@ dependencies {
 		exclude group: 'org.apache.httpcomponents'
 		exclude group: 'com.google.guava', module: 'listenablefuture'
 	}
-	implementation 'eu.chainfire:libsuperuser:1.1.0.201903290044'
+	implementation 'eu.chainfire:libsuperuser:1.1.0.201907261845'
 	implementation 'net.erdfelt.android:apk-parser:1.1'
 }
