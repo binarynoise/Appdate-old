@@ -6,9 +6,11 @@ android:
     - android-21
     - add-on
     - extra
+branches:
+  except:
+  - /^dependabot\/.*$/
 script:
   - ./gradlew build connectedCheck --stacktrace
-
 before_install:
   - mkdir "$ANDROID_HOME/licenses" || true
   - echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
