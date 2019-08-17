@@ -23,11 +23,11 @@ links to these files.
 ## currently supported
  - [x] github.com _public_ releases (and similar websites)
  - [x] F-droid repository (beta, not completely tested, if available prefer github releases)
- - [x] Xposed repository
+ - [ ] Xposed repository (not supported due to different version counting)
  - [ ] AndroidFileHost 
 
 _Note_: please double-check if the version found by Appdate is the same as you'd expect because
-some developers use a different versioning in their filenames than in therir app.  
+some developers use a different versioning (like xposed) in their filenames than in their app.  
 Example: version in app manifest `v2.5.3`, version in filename `253`
 
 ## License
