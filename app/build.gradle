@@ -59,7 +59,7 @@ dependencies {
 		exclude group: 'org.apache.httpcomponents'
 		exclude group: 'com.google.guava', module: 'listenablefuture'
 	}
-	implementation('com.google.auth:google-auth-library-oauth2-http:0.16.1'){
+	implementation('com.google.auth:google-auth-library-oauth2-http:0.17.0'){
 		exclude group: 'org.apache.httpcomponents'
 		exclude group: 'com.google.guava', module: 'listenablefuture'
 	}
