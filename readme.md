@@ -1,7 +1,6 @@
-# Appdate
+# Depreciated: use [the new Appdate](https://github.com/binarynoise/Appdate)
 
-[![Build Status](https://travis-ci.com/binarynoise/Appdate.svg?branch=master)](https://travis-ci.com/binarynoise/Appdate)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=binarynoise/Appdate)](https://dependabot.com)
+# Appdate
 
 Appdate looks for updates of open-source apps 
 by scanning the website where the updates are released.
@@ -30,5 +29,4 @@ _Note_: please double-check if the version found by Appdate is the same as you'd
 some developers use a different versioning (like xposed) in their filenames than in their app.  
 Example: version in app manifest `v2.5.3`, version in filename `253`
 
-## License
-see [`License.md`](LICENSE.md) for license details
+(c) binarynoise 2019
